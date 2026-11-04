@@ -1,0 +1,17 @@
+[theme]
+base = "light"
+primaryColor = "#C4472B"
+backgroundColor = "#F4EFE6"
+secondaryBackgroundColor = "#EBE4D8"
+textColor = "#1A1814"
+font = "Geist:https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"
+headingFont = "Instrument Serif:https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap"
+codeFont = "Geist Mono:https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap"
+borderColor = "#D8CFBF"
+baseRadius = "10px"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false

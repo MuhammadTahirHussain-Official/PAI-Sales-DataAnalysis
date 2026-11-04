@@ -1,0 +1,880 @@
+{
+ "raw": {
+  "train": {
+   "rows": 3000888,
+   "columns": 6,
+   "dtypes": {
+    "id": "int64",
+    "date": "datetime64[ns]",
+    "store_nbr": "int64",
+    "family": "object",
+    "sales": "float64",
+    "onpromotion": "int64"
+   },
+   "missing": {
+    "id": 0,
+    "date": 0,
+    "store_nbr": 0,
+    "family": 0,
+    "sales": 0,
+    "onpromotion": 0
+   },
+   "duplicates": 0,
+   "sales": {
+    "mean": 357.77574911261877,
+    "median": 11.0,
+    "max": 124717.0,
+    "skew": 7.3587578188826415,
+    "zero_share": 0.3129506999261552,
+    "zero_rows": 939130,
+    "p": {
+     "0.5": 11.0,
+     "0.75": 195.84725,
+     "0.9": 867.0,
+     "0.95": 1965.0,
+     "0.99": 5507.0,
+     "0.999": 12076.22554800072
+    },
+    "total": 1073644952.2030684
+   },
+   "date_min": "2013-01-01",
+   "date_max": "2017-08-15",
+   "dates": 1684,
+   "stores": 54,
+   "families": 33,
+   "promo_share": 0.20371603338745065,
+   "missing_calendar_days": [
+    "2013-12-25",
+    "2014-12-25",
+    "2015-12-25",
+    "2016-12-25"
+   ]
+  },
+  "stores": {
+   "rows": 54,
+   "columns": 5,
+   "dtypes": {
+    "store_nbr": "int64",
+    "city": "object",
+    "state": "object",
+    "type": "object",
+    "cluster": "int64"
+   },
+   "missing": {
+    "store_nbr": 0,
+    "city": 0,
+    "state": 0,
+    "type": 0,
+    "cluster": 0
+   },
+   "duplicates": 0
+  },
+  "transactions": {
+   "rows": 83488,
+   "columns": 3,
+   "dtypes": {
+    "date": "datetime64[ns]",
+    "store_nbr": "int64",
+    "transactions": "int64"
+   },
+   "missing": {
+    "date": 0,
+    "store_nbr": 0,
+    "transactions": 0
+   },
+   "duplicates": 0,
+   "date_min": "2013-01-01",
+   "date_max": "2017-08-15"
+  },
+  "oil": {
+   "rows": 1218,
+   "columns": 2,
+   "dtypes": {
+    "date": "datetime64[ns]",
+    "dcoilwtico": "float64"
+   },
+   "missing": {
+    "date": 0,
+    "dcoilwtico": 43
+   },
+   "duplicates": 0,
+   "calendar_days_without_row": 486,
+   "date_min": "2013-01-01",
+   "date_max": "2017-08-31"
+  },
+  "holidays_events": {
+   "rows": 350,
+   "columns": 6,
+   "dtypes": {
+    "date": "datetime64[ns]",
+    "type": "object",
+    "locale": "object",
+    "locale_name": "object",
+    "description": "object",
+    "transferred": "bool"
+   },
+   "missing": {
+    "date": 0,
+    "type": 0,
+    "locale": 0,
+    "locale_name": 0,
+    "description": 0,
+    "transferred": 0
+   },
+   "duplicates": 0,
+   "types": {
+    "Holiday": 221,
+    "Event": 56,
+    "Additional": 51,
+    "Transfer": 12,
+    "Bridge": 5,
+    "Work Day": 5
+   },
+   "locales": {
+    "National": 174,
+    "Local": 152,
+    "Regional": 24
+   },
+   "transferred": 12
+  }
+ },
+ "merged": {
+  "rows": 3000888,
+  "columns": 17,
+  "missing": {
+   "id": 0,
+   "date": 0,
+   "store_nbr": 0,
+   "family": 0,
+   "sales": 0,
+   "onpromotion": 0,
+   "city": 0,
+   "state": 0,
+   "type": 0,
+   "cluster": 0,
+   "transactions": 245784,
+   "oil_price": 928422,
+   "holiday_type": 2733291,
+   "holiday_locale": 2733291,
+   "holiday_locale_name": 2733291,
+   "holiday_description": 2733291,
+   "holiday_transferred": 2733291
+  }
+ },
+ "etl_steps": [
+  {
+   "step": "train",
+   "rows": 3000888,
+   "columns": 6,
+   "join": "base table",
+   "key": "id"
+  },
+  {
+   "step": "+ stores",
+   "rows": 3000888,
+   "columns": 10,
+   "join": "left, many-to-one",
+   "key": "store_nbr"
+  },
+  {
+   "step": "+ transactions",
+   "rows": 3000888,
+   "columns": 11,
+   "join": "left, many-to-one",
+   "key": "date + store_nbr"
+  },
+  {
+   "step": "+ oil",
+   "rows": 3000888,
+   "columns": 12,
+   "join": "left",
+   "key": "date"
+  },
+  {
+   "step": "+ holidays/events",
+   "rows": 3000888,
+   "columns": 17,
+   "join": "left, many-to-one (aggregated per store-day)",
+   "key": "date + store_nbr"
+  }
+ ],
+ "clean": {
+  "rows": 3000888,
+  "columns": 38,
+  "missing": {
+   "id": 0,
+   "date": 0,
+   "store_nbr": 0,
+   "family": 0,
+   "sales": 0,
+   "onpromotion": 0,
+   "city": 0,
+   "state": 0,
+   "type": 0,
+   "cluster": 0,
+   "transactions": 0,
+   "oil_price": 0,
+   "holiday_type": 0,
+   "holiday_locale": 0,
+   "holiday_locale_name": 0,
+   "holiday_description": 0,
+   "holiday_transferred": 0,
+   "transactions_missing": 0,
+   "transactions_fill_method": 0,
+   "oil_price_missing": 0,
+   "is_holiday": 0,
+   "is_national_holiday": 0,
+   "is_regional_holiday": 0,
+   "is_local_holiday": 0,
+   "is_event": 0,
+   "is_work_day": 0,
+   "sales_log1p": 0,
+   "sales_extreme_flag": 0,
+   "is_earthquake_period": 0,
+   "year": 0,
+   "month": 0,
+   "day": 0,
+   "day_of_week": 0,
+   "day_name": 0,
+   "week_of_year": 0,
+   "quarter": 0,
+   "is_weekend": 0,
+   "is_payday": 0
+  },
+  "fill_method_rows": {
+   "observed": 2755104,
+   "zero_sales_store_day": 241890,
+   "ratio_estimate": 3894
+  },
+  "fill_method_store_days": {
+   "observed": 83488,
+   "zero_sales_store_day": 7330,
+   "ratio_estimate": 118
+  },
+  "oil_filled_dates": 521,
+  "extreme_rows": 3373,
+  "flags": {
+   "is_holiday": 151734,
+   "is_national_holiday": 138996,
+   "is_regional_holiday": 1023,
+   "is_local_holiday": 11880,
+   "is_event": 98010,
+   "is_work_day": 8910,
+   "is_earthquake_period": 55242,
+   "is_weekend": 857142,
+   "is_payday": 197802
+  },
+  "skew_sales": 7.3587578188826415,
+  "skew_log": 0.408295498608048,
+  "first_sales": {
+   "1": "2013-01-02",
+   "2": "2013-01-02",
+   "3": "2013-01-02",
+   "4": "2013-01-02",
+   "5": "2013-01-02",
+   "6": "2013-01-02",
+   "7": "2013-01-02",
+   "8": "2013-01-02",
+   "9": "2013-01-02",
+   "10": "2013-01-02",
+   "11": "2013-01-02",
+   "12": "2013-01-02",
+   "13": "2013-01-02",
+   "14": "2013-01-02",
+   "15": "2013-01-02",
+   "16": "2013-01-02",
+   "17": "2013-01-02",
+   "18": "2013-01-02",
+   "19": "2013-01-02",
+   "20": "2015-02-13",
+   "21": "2015-07-24",
+   "22": "2015-10-09",
+   "23": "2013-01-02",
+   "24": "2013-01-02",
+   "25": "2013-01-01",
+   "26": "2013-01-02",
+   "27": "2013-01-02",
+   "28": "2013-01-02",
+   "29": "2015-03-20",
+   "30": "2013-01-02",
+   "31": "2013-01-02",
+   "32": "2013-01-02",
+   "33": "2013-01-02",
+   "34": "2013-01-02",
+   "35": "2013-01-02",
+   "36": "2013-05-09",
+   "37": "2013-01-02",
+   "38": "2013-01-02",
+   "39": "2013-01-02",
+   "40": "2013-01-02",
+   "41": "2013-01-02",
+   "42": "2015-08-21",
+   "43": "2013-01-02",
+   "44": "2013-01-02",
+   "45": "2013-01-02",
+   "46": "2013-01-02",
+   "47": "2013-01-02",
+   "48": "2013-01-02",
+   "49": "2013-01-02",
+   "50": "2013-01-02",
+   "51": "2013-01-02",
+   "52": "2017-04-20",
+   "53": "2014-05-29",
+   "54": "2013-01-02"
+  }
+ },
+ "integrity": [
+  [
+   "Same number of rows",
+   true
+  ],
+  [
+   "Same row order (id)",
+   true
+  ],
+  [
+   "Same dates, stores and families",
+   true
+  ],
+  [
+   "Sales unchanged",
+   true
+  ],
+  [
+   "Promotions unchanged",
+   true
+  ],
+  [
+   "Known transactions unchanged",
+   true
+  ],
+  [
+   "transactions_missing matches original gaps",
+   true
+  ],
+  [
+   "Known oil prices unchanged",
+   true
+  ],
+  [
+   "oil_price_missing matches original gaps",
+   true
+  ],
+  [
+   "No duplicate date/store/family keys",
+   true
+  ],
+  [
+   "No missing values after cleaning",
+   true
+  ]
+ ],
+ "pydantic": [
+  {
+   "checked": 90936,
+   "errors": 0,
+   "seconds": 0.1,
+   "first_error": null,
+   "model": "StoreDayTransactions",
+   "level": "one row per store-day",
+   "notebook": "03 \u00b7 15.8 / 04 \u00b7 16.4",
+   "fields": [
+    {
+     "field": "store_nbr",
+     "type": "int",
+     "rules": "ge=1, le=54"
+    },
+    {
+     "field": "transactions",
+     "type": "int",
+     "rules": "ge=0"
+    },
+    {
+     "field": "transactions_missing",
+     "type": "int",
+     "rules": "ge=0, le=1"
+    }
+   ],
+   "population": 90936
+  },
+  {
+   "checked": 1684,
+   "errors": 0,
+   "seconds": 0.0,
+   "first_error": null,
+   "model": "OilDay",
+   "level": "one row per date",
+   "notebook": "03 \u00b7 15.9.1 / 04 \u00b7 16.4",
+   "fields": [
+    {
+     "field": "date",
+     "type": "date",
+     "rules": "type only"
+    },
+    {
+     "field": "oil_price",
+     "type": "float",
+     "rules": "gt=0, allow_inf_nan=False"
+    }
+   ],
+   "population": 1684
+  },
+  {
+   "checked": 100000,
+   "errors": 0,
+   "seconds": 0.41,
+   "first_error": null,
+   "model": "CleanSalesRow",
+   "level": "random sample of cleaned rows",
+   "notebook": "03 \u00b7 15.14",
+   "fields": [
+    {
+     "field": "id",
+     "type": "int",
+     "rules": "ge=0"
+    },
+    {
+     "field": "date",
+     "type": "date",
+     "rules": "type only"
+    },
+    {
+     "field": "store_nbr",
+     "type": "int",
+     "rules": "ge=1, le=54"
+    },
+    {
+     "field": "family",
+     "type": "str",
+     "rules": "min_length=1"
+    },
+    {
+     "field": "sales",
+     "type": "float",
+     "rules": "ge=0, allow_inf_nan=False"
+    },
+    {
+     "field": "onpromotion",
+     "type": "int",
+     "rules": "ge=0"
+    },
+    {
+     "field": "city",
+     "type": "str",
+     "rules": "min_length=1"
+    },
+    {
+     "field": "state",
+     "type": "str",
+     "rules": "min_length=1"
+    },
+    {
+     "field": "type",
+     "type": "str",
+     "rules": "min_length=1"
+    },
+    {
+     "field": "cluster",
+     "type": "int",
+     "rules": "ge=1"
+    },
+    {
+     "field": "transactions",
+     "type": "int",
+     "rules": "ge=0"
+    },
+    {
+     "field": "transactions_missing",
+     "type": "int",
+     "rules": "ge=0, le=1"
+    },
+    {
+     "field": "oil_price",
+     "type": "float",
+     "rules": "gt=0, allow_inf_nan=False"
+    },
+    {
+     "field": "oil_price_missing",
+     "type": "int",
+     "rules": "ge=0, le=1"
+    },
+    {
+     "field": "is_holiday",
+     "type": "int",
+     "rules": "ge=0, le=1"
+    },
+    {
+     "field": "is_event",
+     "type": "int",
+     "rules": "ge=0, le=1"
+    },
+    {
+     "field": "is_work_day",
+     "type": "int",
+     "rules": "ge=0, le=1"
+    },
+    {
+     "field": "sales_log1p",
+     "type": "float",
+     "rules": "ge=0, allow_inf_nan=False"
+    },
+    {
+     "field": "sales_extreme_flag",
+     "type": "int",
+     "rules": "ge=0, le=1"
+    },
+    {
+     "field": "is_earthquake_period",
+     "type": "int",
+     "rules": "ge=0, le=1"
+    },
+    {
+     "field": "month",
+     "type": "int",
+     "rules": "ge=1, le=12"
+    },
+    {
+     "field": "day_of_week",
+     "type": "int",
+     "rules": "ge=0, le=6"
+    },
+    {
+     "field": "is_weekend",
+     "type": "int",
+     "rules": "ge=0, le=1"
+    },
+    {
+     "field": "is_payday",
+     "type": "int",
+     "rules": "ge=0, le=1"
+    }
+   ],
+   "population": 3000888
+  },
+  {
+   "checked": 100000,
+   "errors": 0,
+   "seconds": 0.22,
+   "first_error": null,
+   "model": "ModelRow",
+   "level": "random sample of model-ready rows",
+   "notebook": "05 \u00b7 17.13",
+   "fields": [
+    {
+     "field": "store_nbr",
+     "type": "int",
+     "rules": "ge=1, le=54"
+    },
+    {
+     "field": "family_code",
+     "type": "int",
+     "rules": "ge=0, le=32"
+    },
+    {
+     "field": "sales_log1p",
+     "type": "float",
+     "rules": "ge=0, allow_inf_nan=False"
+    },
+    {
+     "field": "sales_lag_16",
+     "type": "float",
+     "rules": "ge=0, allow_inf_nan=False"
+    },
+    {
+     "field": "sales_lag_364",
+     "type": "float",
+     "rules": "ge=-1, allow_inf_nan=False"
+    },
+    {
+     "field": "sales_rolling_mean_7",
+     "type": "float",
+     "rules": "ge=0, allow_inf_nan=False"
+    },
+    {
+     "field": "transactions_lag_16",
+     "type": "float",
+     "rules": "ge=0, allow_inf_nan=False"
+    },
+    {
+     "field": "oil_price_change_7",
+     "type": "float",
+     "rules": "gt=-1, allow_inf_nan=False"
+    },
+    {
+     "field": "month_sin",
+     "type": "float",
+     "rules": "ge=-1, le=1"
+    },
+    {
+     "field": "days_to_christmas",
+     "type": "int",
+     "rules": "ge=0, le=365"
+    },
+    {
+     "field": "is_holiday",
+     "type": "int",
+     "rules": "ge=0, le=1"
+    },
+    {
+     "field": "store_open",
+     "type": "int",
+     "rules": "ge=0, le=1"
+    }
+   ],
+   "population": 2924262
+  }
+ ],
+ "coverage": [
+  {
+   "column": "id",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "date",
+   "pydantic": [
+    "OilDay",
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "store_nbr",
+   "pydantic": [
+    "StoreDayTransactions",
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "family",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "sales",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "onpromotion",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "city",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "state",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "type",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "cluster",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "transactions",
+   "pydantic": [
+    "StoreDayTransactions",
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "oil_price",
+   "pydantic": [
+    "OilDay",
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "holiday_type",
+   "pydantic": [],
+   "pandas": true
+  },
+  {
+   "column": "holiday_locale",
+   "pydantic": [],
+   "pandas": true
+  },
+  {
+   "column": "holiday_locale_name",
+   "pydantic": [],
+   "pandas": true
+  },
+  {
+   "column": "holiday_description",
+   "pydantic": [],
+   "pandas": true
+  },
+  {
+   "column": "holiday_transferred",
+   "pydantic": [],
+   "pandas": true
+  },
+  {
+   "column": "transactions_missing",
+   "pydantic": [
+    "StoreDayTransactions",
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "transactions_fill_method",
+   "pydantic": [],
+   "pandas": true
+  },
+  {
+   "column": "oil_price_missing",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "is_holiday",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "is_national_holiday",
+   "pydantic": [],
+   "pandas": true
+  },
+  {
+   "column": "is_regional_holiday",
+   "pydantic": [],
+   "pandas": true
+  },
+  {
+   "column": "is_local_holiday",
+   "pydantic": [],
+   "pandas": true
+  },
+  {
+   "column": "is_event",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "is_work_day",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "sales_log1p",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "sales_extreme_flag",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "is_earthquake_period",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "year",
+   "pydantic": [],
+   "pandas": true
+  },
+  {
+   "column": "month",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "day",
+   "pydantic": [],
+   "pandas": true
+  },
+  {
+   "column": "day_of_week",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "day_name",
+   "pydantic": [],
+   "pandas": true
+  },
+  {
+   "column": "week_of_year",
+   "pydantic": [],
+   "pandas": true
+  },
+  {
+   "column": "quarter",
+   "pydantic": [],
+   "pandas": true
+  },
+  {
+   "column": "is_weekend",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  },
+  {
+   "column": "is_payday",
+   "pydantic": [
+    "CleanSalesRow"
+   ],
+   "pandas": true
+  }
+ ],
+ "model_ready": {
+  "rows": 2924262,
+  "columns": 89,
+  "features": 85,
+  "first_date": "2013-02-13",
+  "removed_rows": 76626,
+  "missing": 0
+ }
+}
