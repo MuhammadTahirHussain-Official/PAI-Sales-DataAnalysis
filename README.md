@@ -27,6 +27,12 @@ streamlit run app/streamlit_app.py
 
 share.streamlit.io → Create app → this repository, branch `main`, main file `app/streamlit_app.py`, Python 3.12. Pick a custom subdomain under App settings.
 
+## Always awake
+
+Streamlit Community Cloud puts apps to sleep after hours without visitors. The workflow `.github/workflows/keep-awake.yml` opens the site in a headless browser every 3 hours (`scripts/keep_awake.py`), clicks the wake-up button if the app ever fell asleep, and confirms the page loads. It also makes a small heartbeat commit after 45 quiet days, because GitHub stops scheduled workflows in repositories without activity for 60 days.
+
+One-time setup after deploying: repository Settings → Secrets and variables → Actions → Variables → add `APP_URL` with the app address (for example `https://stores-sales-eda.streamlit.app`). Then Actions → "Keep the Streamlit app awake" → Run workflow to check it once.
+
 ## Data
 
 The app reads only `app/data/` (about 5 MB): daily, store-day, family-day and store-family aggregates, the stores/oil/holiday tables, two 150,000-row random samples, real Pydantic validation results and feature correlations. These were produced by `app/prepare_data.py` from the original Kaggle CSVs and the outputs of the cleaning and feature-engineering notebooks of the analysis project, which are not included here. The source data belongs to the Kaggle competition and is subject to its rules.

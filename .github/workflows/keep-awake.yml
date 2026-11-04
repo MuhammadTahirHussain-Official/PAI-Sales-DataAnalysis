@@ -1,0 +1,81 @@
+name: Keep the Streamlit app awake
+
+# Streamlit Community Cloud puts an app to sleep after hours without visitors.
+# This job visits the site in a real browser every 3 hours (and wakes it if needed),
+# so it is always ready when someone opens it.
+#
+# Setup: repository Settings -> Secrets and variables -> Actions -> Variables
+#        add  APP_URL = https://<your-subdomain>.streamlit.app
+
+on:
+  schedule:
+    - cron: "23 */3 * * *"   # every 3 hours, at minute 23 (UTC)
+  workflow_dispatch:          # "Run workflow" button for a manual check
+
+permissions:
+  contents: write             # only used for the heartbeat commit below
+
+concurrency:
+  group: keep-awake
+  cancel-in-progress: false
+
+jobs:
+  visit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that APP_URL is set
+        id: url
+        run: |
+          if [ -z "${{ vars.APP_URL }}" ]; then
+            echo "::warning::Add the repository variable APP_URL (your .streamlit.app address) to enable the keep-awake visits."
+            echo "set=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "set=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.url.outputs.set == 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Install Playwright and Chromium
+        if: steps.url.outputs.set == 'true'
+        run: |
+          pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+
+      - name: Visit the app (wake it if it is asleep)
+        if: steps.url.outputs.set == 'true'
+        run: python scripts/keep_awake.py "${{ vars.APP_URL }}"
+
+      - name: Upload a screenshot if the visit failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: keep-awake-failure
+          path: keep_awake_failure.png
+          if-no-files-found: ignore
+
+  heartbeat:
+    # GitHub disables scheduled workflows after 60 days without repository activity.
+    # A tiny commit every ~45 quiet days keeps this schedule running indefinitely.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Commit a heartbeat if the repository has been quiet for 45 days
+        run: |
+          last=$(git log -1 --format=%ct)
+          now=$(date +%s)
+          if [ $(( (now - last) / 86400 )) -ge 45 ]; then
+            date -u +"%Y-%m-%dT%H:%M:%SZ" > .github/heartbeat
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .github/heartbeat
+            git commit -m "Heartbeat: keep the scheduled keep-awake workflow enabled"
+            git push
+          else
+            echo "Last commit is recent; no heartbeat needed."
+          fi
