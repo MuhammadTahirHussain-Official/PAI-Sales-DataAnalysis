@@ -222,6 +222,8 @@ footer {{ visibility:hidden; }}
 .g-top {{ background:linear-gradient(90deg,#B4552A,#FF8A4C 62%,#F2D479); }}
 .g-down {{ background:linear-gradient(90deg,#7E332E,#D65F55 60%,#F0918A); }}
 .g-up {{ background:linear-gradient(90deg,#2B5560,#5F99AB 60%,#A3D3E2); }}
+.scale {{ display:flex; align-items:center; gap:14px; font-family:{FONT_MONO}; font-size:.76rem; color:{INK_2}; }}
+.scale i {{ flex:1 1 auto; height:8px; border-radius:99px; background:linear-gradient(90deg,hsl(0,82%,60%),hsl(54,82%,60%),hsl(107,82%,60%),hsl(161,82%,60%),hsl(215,82%,60%)); }}
 .st-key-pickers {{ position:absolute; width:1px; height:1px; overflow:hidden; opacity:0; pointer-events:none; }}
 @media (max-width:640px) {{ .pbar {{ grid-template-columns:minmax(0,104px) minmax(0,1fr) 56px 42px; gap:8px; padding:5px 2px; }} .pbar .nm {{ font-size:.8rem; }} .pbar .num {{ font-size:.74rem; }} .pbar .chg {{ font-size:.68rem; }} .pbars {{ padding:.8rem .7rem; }} }}
 
@@ -240,7 +242,7 @@ footer {{ visibility:hidden; }}
 .flow-b i.on {{ background:{PERSIMMON}; }}
 
 /* our own menu: a bar with two panels that open as a curtain, links rising one after another */
-.st-key-topnav {{ position:fixed; top:0; left:0; right:0; height:58px; z-index:999999; display:flex; flex-direction:row; align-items:center; gap:clamp(14px,3vw,40px); padding:0 clamp(14px,3vw,40px); background:rgba(14,15,17,.94); border-bottom:1px solid rgba(255,255,255,.1); }}
+.st-key-topnav {{ position:fixed; top:0; left:0; right:0; height:58px; z-index:999999; display:flex; flex-direction:row; align-items:center; gap:clamp(14px,3vw,40px); padding:0 clamp(14px,3vw,40px); background:#0E0F11; border-bottom:1px solid rgba(255,255,255,.1); }}
 .st-key-topnav > div, .st-key-topnav [data-testid="stElementContainer"] {{ width:auto !important; }}
 .st-key-topnav [data-testid="stPageLink"] a {{ background:none; border:0; box-shadow:none; padding:0; border-radius:0; }}
 .st-key-topnav [data-testid="stPageLink"] p, .navlabel {{ font-family:{FONT_BODY}; font-size:clamp(.82rem,1.6vw,.95rem); font-weight:500; color:{INK}; white-space:nowrap; }}
