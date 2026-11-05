@@ -5,6 +5,7 @@ import streamlit as st
 
 from lib import data, theme
 
+DOWNLOADS = "https://github.com/MuhammadTahirHussain-Official/PAI-Sales-DataAnalysis/raw/main/downloads/"
 S = data.summary()
 M = S["merged"]["missing"]
 C = S["clean"]
@@ -153,3 +154,26 @@ fig.update_layout(xaxis_title="Rows with the flag = 1", yaxis_title="")
 theme.chart(fig, height=380)
 theme.figcap("3.6", "Bar chart", "How many of the 3,000,888 rows carry each new 0/1 flag.",
              "Only 5% of rows are on an active holiday for their store. 12,837 rows whose only record was transferred away now correctly count as normal days, and Work Days are kept apart from holidays.", "")
+
+# ------------------------------------------------------------------ download
+theme.chapter("3.7", "Download the final clean data",
+              "The complete cleaned table as a CSV inside a zip file: 3,000,888 rows, 38 columns, no missing values.")
+theme.stats([("3,000,888", "rows"), ("38", "columns", "17 merged and 21 added by cleaning"), ("0", "missing values", "", "good")])
+c1, c2 = st.columns([1, 2])
+with c1:
+    theme.html(theme.card("Everything", "Full table", "One CSV with all five years. Too large for Excel, which stops at about 1 million rows; use Python, Power BI or a database."))
+    st.link_button("Download full CSV (36 MB zip)", DOWNLOADS + "cleaned_data.zip", type="primary", width="stretch")
+with c2:
+    theme.html(theme.card("One year at a time", "Opens in Excel", "Each year is its own CSV of about 650,000 rows (2017 runs to 15 August), so it fits in Excel."))
+    for col, year in zip(st.columns(5), range(2013, 2018)):
+        col.link_button(str(year), DOWNLOADS + f"cleaned_data_{year}.zip", width="stretch")
+theme.ledger(["Columns", "Meaning"], [
+    ["id, date, store_nbr, family, sales, onpromotion", "Original sales row"],
+    ["city, state, type, cluster", "Store details"],
+    ["transactions, transactions_missing, transactions_fill_method", "Receipts, and whether each value was observed, set to 0 or estimated"],
+    ["oil_price, oil_price_missing", "Oil price, and whether it was filled"],
+    ["holiday_type, holiday_locale, holiday_locale_name, holiday_description, holiday_transferred", "Merged holiday text"],
+    ["is_holiday, is_national_holiday, is_regional_holiday, is_local_holiday, is_event, is_work_day", "Active holiday and event flags"],
+    ["sales_log1p, sales_extreme_flag, is_earthquake_period", "Log of sales, flagged extreme values, earthquake month"],
+    ["year, month, day, day_of_week, day_name, week_of_year, quarter, is_weekend, is_payday", "Date features"],
+])

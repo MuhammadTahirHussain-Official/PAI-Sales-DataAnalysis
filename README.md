@@ -27,6 +27,10 @@ An interactive Streamlit report on the Kaggle **Store Sales – Time Series Fore
 
 Suggested orders exclude stock on hand because the data has no stock counts. Motion uses GSAP 3.13 (bundled in `app/static`, standard GSAP license).
 
+## Download the final clean data
+
+[`downloads/cleaned_data.zip`](downloads/cleaned_data.zip) holds the complete cleaned table as one CSV: 3,000,888 rows, 38 columns, no missing values. Excel stops at about 1 million rows, so `downloads/cleaned_data_2013.zip` to `cleaned_data_2017.zip` hold one year each. The same links are on the website.
+
 ## Run locally
 
 ```bash

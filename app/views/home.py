@@ -58,6 +58,8 @@ with c2:
                           "Pick your store and month. See what sold, which day to staff up, what to reorder, why a day was high or low, and the next actions, in plain words."))
     st.page_link("views/mgr_dashboard.py", label="Open my store", icon=":material/arrow_forward:")
 
+st.link_button("Download the final clean data (CSV, 36 MB zip)", "https://github.com/MuhammadTahirHussain-Official/PAI-Sales-DataAnalysis/raw/main/downloads/cleaned_data.zip", type="primary")
+
 theme.chapter("Conclusion", "What the data tells us")
 theme.stats([
     ("31.3<small>%</small>", "rows with zero sales", "Kept: they are real, not errors.", True),
