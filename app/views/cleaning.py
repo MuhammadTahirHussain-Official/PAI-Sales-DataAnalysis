@@ -31,12 +31,12 @@ if view == "Before and after":
                          hovertemplate="%{y}: %{x:,} empty rows after<extra></extra>"))
 fig.update_layout(barmode="group", xaxis_title="Empty rows (of 3,000,888)", yaxis_title="")
 theme.chart(fig, height=360)
-theme.figcap("3.2", "Grouped bar chart", "Empty values per column in the merged table, before and after cleaning.",
+theme.figcap("3.2", "Grouped bar chart", "How many empty values each column had, before and after cleaning.",
              "The five holiday columns are empty on 91% of rows simply because most days are not holidays. Oil is empty on weekends (928,422 rows), and transactions on 7,448 store-days (245,784 rows). After cleaning every column is complete.",
-             "switch off 'after' to see the original gaps alone.")
+             "a longer bar means more empty rows; orange is before, green is after.")
 
 # ------------------------------------------------------------------ cleaning ledger
-theme.chapter("3.3", "The cleaning ledger", "Every rule applied in notebook 03, in order, with how many rows it touched.")
+theme.chapter("3.3", "Every cleaning rule", "Every cleaning rule, in order, and how many rows it changed.")
 fr = C["fill_method_rows"]
 theme.ledger(
     ["Step", "Rule", "Rows affected", "Validation"],
@@ -76,14 +76,14 @@ with c2:
     fig.data[0].showlegend = True
     fig.update_layout(xaxis_title="Total sales of the store-day", yaxis_title="Transactions", xaxis_type="log", yaxis_type="log")
     theme.chart(fig, height=330)
-theme.figcap("3.4", "Donut and log-log scatter",
-             "Left: where each store-day's transaction value comes from. Right: estimated store-days (orange) on top of 8,000 observed ones (sand).",
-             "92% of store-days are real observations. The 118 estimates sit inside the cloud of real store-days, so the ratio rule produced plausible values; they cluster on 2 – 4 January 2016 when records were missing for 53 stores.",
-             "on the right both axes are logarithmic; hover an orange point to see which store and day it is.")
+theme.figcap("3.4", "Donut and scatter charts",
+             "Left: where each customer count comes from. Right: estimated days (orange) on top of 8,000 real days (grey).",
+             "92% of the counts are real. The 118 estimates sit among the real days, which shows the rule gave believable numbers. Most are from 2 to 4 January 2016, when records were missing for 53 stores.",
+             "the right chart uses a log scale on both sides; point at an orange dot to see its store and day.")
 
 # ------------------------------------------------------------------ oil before / after
 theme.chapter("3.5", "Oil: forward fill, never interpolation",
-              "On a Saturday the price in force is still Friday's close. Copying it forward uses only the past, which keeps the data safe for forecasting.")
+              "On a Saturday the latest price is still Friday's. Copying it forward uses only the past, so no future information gets in.")
 daily = data.load("daily")
 yr = st.select_slider("Year", options=sorted(daily["year"].unique()), value=2015)
 d = daily[daily["year"] == yr]
@@ -99,23 +99,23 @@ fig.add_trace(go.Scatter(x=filled["date"], y=filled["oil_price"], mode="markers"
 fig.update_layout(yaxis_title="USD per barrel")
 theme.chart(fig, height=400)
 theme.figcap("3.5", "Line with markers",
-             f"Oil price in {yr}: teal dots are original prices, orange diamonds were filled, the wide grey band is the cleaned series.",
-             "Filled points always repeat the previous trading day, so every weekend appears as a short flat step. No price was invented between two known prices.",
-             "change the year with the slider; hover a diamond to see that it copies the day before.")
+             f"Oil price in {yr}. Blue dots are original prices and orange diamonds were filled in.",
+             "Each filled point repeats the last known price, so every weekend looks like a short flat step. No new prices were made up.",
+             "change the year with the slider; point at a diamond to see its price.")
 
 # ------------------------------------------------------------------ flags
-theme.chapter("3.6", "Holiday flags replace mixed text")
+theme.chapter("3.6", "Clear yes or no holiday columns")
 fl = pd.Series(C["flags"]).rename(data.label).rename_axis("flag").reset_index(name="rows").sort_values("rows")
 fig = px.bar(fl, x="rows", y="flag", orientation="h", color_discrete_sequence=[theme.OCHRE], text="rows")
 fig.update_traces(texttemplate="%{text:,}", textposition="outside", hovertemplate="%{y}: %{x:,} rows<extra></extra>", cliponaxis=False)
 fig.update_layout(xaxis_title="Rows with the flag = 1", yaxis_title="")
 theme.chart(fig, height=380)
-theme.figcap("3.6", "Bar chart", "How many of the 3,000,888 rows carry each new 0/1 flag.",
-             "Only 5% of rows are on an active holiday for their store. 12,837 rows whose only record was transferred away now correctly count as normal days, and Work Days are kept apart from holidays.", "")
+theme.figcap("3.6", "Bar chart", "How many of the 3,000,888 rows are marked yes for each new flag.",
+             "Only 5% of rows fall on a real holiday for that store. 12,837 rows whose holiday was moved away now count as normal days, and Work Days are kept apart from holidays.", "")
 
 # ------------------------------------------------------------------ validation
 theme.chapter("Validation", "Every rule, checked",
-              "Cleaning is only trustworthy if it is tested. Pandas assertions cover all three million rows, and Pydantic models describe what a valid row looks like and reject anything else.")
+              "Cleaning can only be trusted if it is tested. Automatic checks cover all three million rows, and Pydantic rules describe what a valid row looks like and reject anything else.")
 checked = sum(p["checked"] for p in S["pydantic"])
 errors = sum(p["errors"] for p in S["pydantic"])
 theme.stats([
@@ -127,14 +127,14 @@ theme.stats([
 
 # ------------------------------------------------------------------ integrity
 theme.chapter("4.1", "Did cleaning keep the original data intact?",
-              "Each line compares the cleaned table with the merged table it came from. Cleaning may add information; it must never change an observation.")
+              "Each line compares the cleaned table with the original. Cleaning may add information, but it must never change a real value.")
 theme.ledger(["Check", "Result"],
              [[name, '<span class="ok">PASS</span>' if ok else '<span class="fail">FAIL</span>'] for name, ok in S["integrity"]])
 
 # ------------------------------------------------------------------ models
 theme.chapter("4.2", "The Pydantic models",
-              "A Pydantic model is a small class: one line per column, with its type and allowed range. "
-              "<code>ge</code> means greater or equal, <code>gt</code> greater than, <code>le</code> less or equal. "
+              "Each set of rules lists the columns and what values they may hold. "
+              "<code>ge</code> means this number or more, <code>gt</code> more than this number, and <code>le</code> this number or less. "
               "A value such as 12.5 transactions, −3 sales or an empty oil price is rejected.")
 for p in S["pydantic"]:
     with st.expander(f"{p['model']}  ·  {p['level']}  ·  {p['checked']:,} checked  ·  {p['errors']} errors", expanded=p["model"] == "StoreDayTransactions"):
@@ -146,8 +146,8 @@ for p in S["pydantic"]:
         theme.ledger(["Field", "Type", "Rules"], [[f"<code>{f['field']}</code>", f["type"], f["rules"]] for f in p["fields"]])
 
 # ------------------------------------------------------------------ coverage matrix
-theme.chapter("4.3", "Coverage: which column is protected by what",
-              "Every column of the cleaned table is covered by the pandas checks. The heat map shows which ones are also validated field by field by a Pydantic model.")
+theme.chapter("4.3", "Which check protects which column",
+              "Every column is covered by automatic checks. This grid shows which ones also have Pydantic rules of their own.")
 cov = pd.DataFrame(S["coverage"])
 models = ["StoreDayTransactions", "OilDay", "CleanSalesRow"]
 z = [[1 if m in r["pydantic"] else 0 for m in models] + [1] for _, r in cov.iterrows()]
@@ -158,16 +158,13 @@ fig.update_layout(yaxis=dict(autorange="reversed", tickfont=dict(family=theme.FO
 theme.chart(fig, height=820)
 covered = int((cov["pydantic"].str.len() > 0).sum())
 theme.figcap("4.3", "Coverage matrix",
-             f"{covered} of {len(cov)} cleaned columns are validated by at least one Pydantic model; all {len(cov)} are covered by pandas assertions.",
-             "The 14 columns without a Pydantic rule are the five holiday text columns, the national / regional / local holiday flags, "
-             "transactions_fill_method and the calendar parts recalculated from the date (year, day, day_name, week_of_year, quarter). "
-             "They are checked by pandas assertions instead (flags only 0/1, months 1 – 12, weekdays 0 – 6, text never empty). "
-             "Adding them to CleanSalesRow is an easy next step.",
-             "green means the column is validated by that check; hover for details.")
+             f"{covered} of {len(cov)} columns have Pydantic rules, and all {len(cov)} are covered by automatic checks.",
+             "The 14 columns without their own Pydantic rule are text columns, some holiday flags and date parts worked out from the date. They are still covered by the automatic checks.",
+             "green means that check covers the column.")
 
 # ------------------------------------------------------------------ live run
 theme.chapter("4.4", "Run the validation yourself",
-              "This re-runs the store-day and oil models on the data bundled with this site, right now, in your browser session.")
+              "This runs the rules again right now on the data behind this site.")
 
 
 class StoreDayTransactions(BaseModel):
@@ -206,7 +203,7 @@ if st.button("Run Pydantic validation now", type="primary"):
                  (f"{time.perf_counter() - start:.2f} s", "elapsed", "")])
 
 theme.chapter("4.5", "Try to break it",
-              "Type values for one store-day and see how Pydantic answers. This is exactly the rule used in notebook 03, section 15.8.")
+              "Type values for one store and day, and see whether the rule accepts them. This is the same rule used in the project's cleaning notebook.")
 c1, c2, c3 = st.columns([1, 1, 2])
 store = c1.text_input("store_nbr", "12")
 tx = c2.text_input("transactions", "1530")

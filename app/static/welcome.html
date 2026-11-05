@@ -88,9 +88,9 @@ html.fine #ring{display:flex}
 
 <section id="story">
   <div class="ch"><span class="mono">Five years</span><h2>Sales keep growing.</h2><p>Each dot sits under the real weekly sales line. Sales roughly doubled, with a jump every December and a stop every 1 January.</p></div>
-  <div class="ch"><span class="mono">Before cleaning</span><h2>One row in three sells nothing.</h2><p>The dots are now shared out in proportion to the rows in each sales range. The tall stack is the exact zero: real, and kept.</p><span class="big">31.3% zero rows · skewness 7.36</span></div>
+  <div class="ch"><span class="mono">Before cleaning</span><h2>One row in three sells nothing.</h2><p>The dots are now shared out by how many rows fall in each sales range. The tall stack is rows that sold exactly zero: real, and kept.</p><span class="big">31.3% of rows sell nothing</span></div>
   <div class="ch"><span class="mono">After cleaning</span><h2>The week sets the rhythm.</h2><p>Average sales per store by weekday. Sunday is strongest and Thursday weakest, so staffing matters more than payday.</p><span class="big">weekends +39% · paydays +1%</span></div>
-  <div class="ch"><span class="mono">Validated</span><h2>Every series, complete.</h2><p>One dot for each of the 54 stores × 33 products. Every gap was filled by a written rule and checked with Pydantic.</p><span class="big">245,784 transaction gaps · 928,422 oil gaps · 0 errors</span></div>
+  <div class="ch"><span class="mono">Validated</span><h2>Every series, complete.</h2><p>One dot for each of the 54 stores × 33 products. Every gap was filled by a written rule, then checked automatically.</p><span class="big">245,784 transaction gaps · 928,422 oil gaps · 0 errors</span></div>
 </section>
 
 <div class="marquee"><div id="mq"><b>3,000,888</b> rows · <b>5</b> files joined · <b>11/11</b> integrity checks · <b>85</b> features · <b>0</b> validation errors · <b>3,000,888</b> rows · <b>5</b> files joined · <b>11/11</b> integrity checks · <b>85</b> features · <b>0</b> validation errors</div></div>

@@ -16,9 +16,9 @@ theme.page_title("Technical overview", "EDA <em>before cleaning</em>",
 
 if True:  # train.csv
     sales = R["train"]["sales"]
-    theme.chapter("1.1", "How sales are distributed",
-                  "Every row is a store-family-day. Most of them sell very little; a small number sell thousands of units. "
-                  "That shape decides how we must plot, summarise and later model sales.")
+    theme.chapter("1.1", "How much does each row sell?",
+                  "Each row is one product in one store on one day. Most rows sell very little, while a few sell thousands of units. "
+                  "That is why ordinary averages can mislead here.")
     c1, c2, c3 = st.columns([1, 1, 1])
     scale = c1.segmented_control("Scale", ["Log bins (all rows)", "Linear (sample)"], default="Log bins (all rows)")
     clip = c2.slider("Linear view: cut the tail at percentile", 90.0, 100.0, 99.0, 0.5)
@@ -35,7 +35,7 @@ if True:  # train.csv
         theme.chart(fig, height=380)
         theme.figcap("1.1", "Histogram, linear scale",
                      f"{fam}: sales of a random sample of 40,000 rows, cut at the {clip:g}th percentile ({cut:,.0f} units).",
-                     "Almost everything is squeezed into the first bars: most rows sell a handful of units. Moving the slider to 100 shows how far the tail reaches.",
+                     "Almost everything sits in the first bars, because most rows sell only a handful of units. Move the slider to 100 to see how far the biggest sales reach.",
                      "each bar is a range of sales; its height is how many rows fall into it.")
     else:
         h = data.load("sales_histogram")
@@ -48,12 +48,12 @@ if True:  # train.csv
                           yaxis_title="Rows (all 3,000,888)", bargap=0.08)
         theme.chart(fig, height=380)
         theme.figcap("1.1", "Histogram, logarithmic bins",
-                     "All 3,000,888 rows. The first, orange bar is the exact zero: 939,130 rows. The other bars grow by a constant factor, so small and large sales are both visible.",
-                     "With log bins the selling rows form a broad hill around 10 – 1,000 units. Two populations appear: rows that sell nothing at all, and rows that sell normally.",
-                     "move left to right through ever wider sales ranges; hover a bar for its exact range and count.")
+                     "All 3,000,888 rows. The first, orange bar is rows that sold exactly zero: 939,130 of them. Each later bar covers a wider range, so small and large sales both fit.",
+                     "There are really two groups: rows that sold nothing at all, and rows that sold normally, mostly between 10 and 1,000 units.",
+                     "left to right goes from small sales to large; point at a bar for its exact range and count.")
     theme.stats([(f"{v:,.0f}", f"{float(k) * 100:g}th percentile", "") for k, v in sales["p"].items()])
 
-    theme.chapter("1.2", "Which families sell, and which mostly do not",
+    theme.chapter("1.2", "Which products sell, and which mostly do not",
                   "Zero sales are not errors. A store that does not stock baby care will record a zero every day.")
     fs = data.load("family_summary").copy()
     metric = st.segmented_control("Rank families by", ["zero_share", "total_sales", "mean_sales", "promo_share"],
@@ -67,9 +67,9 @@ if True:  # train.csv
     theme.chart(fig, height=760)
     theme.figcap("1.2", "Ranked bar chart",
                  f"The 33 product families ranked by {data.label(metric).lower()}.",
-                 "BOOKS, BABY CARE and similar families are zero on most rows, because many stores barely sell them. GROCERY I, BEVERAGES and PRODUCE carry most of the volume. "
-                 "This is why outliers must be judged inside each store and family, not across the whole table.",
-                 "switch the ranking above; hover a bar for all four measures of that family.")
+                 "Books, Baby care and similar products sell nothing on most days, because many stores barely stock them. Grocery I, Beverages and Produce make up most of the sales. "
+                 "So what counts as unusually high must be judged separately for each store and product.",
+                 "change the ranking above; point at a bar to see all four numbers for that product.")
 
     theme.chapter("1.3", "Promotions and sales in the raw file")
     smp = data.load("raw_train_sample").sample(20_000, random_state=1).copy()
@@ -79,9 +79,9 @@ if True:  # train.csv
     fig.update_layout(xaxis_title="Items on promotion in that row", yaxis_title="log(1 + sales)")
     theme.chart(fig, height=380)
     theme.figcap("1.3", "Box plot",
-                 "Sales (log scale) of 20,000 randomly sampled rows, grouped by how many items were on promotion.",
-                 "The more items are promoted, the higher the typical sales. Note that 2013 has no promotions recorded at all. Part of the lift is because big families (GROCERY I) are promoted the most, so promotions and family size are tangled; the Explore page separates them.",
-                 "the line in each box is the median; the box holds the middle 50% of rows.")
+                 "Sales of 20,000 randomly chosen rows, grouped by how many items were on promotion. Shown on a log scale so small and large sales both fit.",
+                 "The more items on promotion, the more a row usually sells. No promotions were recorded in 2013. Part of this is simply that big products like Grocery I are promoted the most, so promotion is not the only reason.",
+                 "the line in each box is the typical row; the box holds the middle half of rows.")
 
 # =================================================================== stores
 
@@ -102,8 +102,8 @@ if True:  # stores.csv
     theme.chart(fig, height=560)
     theme.figcap("1.4", "Treemap",
                  f"Province → city → store, sized by {size.lower()} and coloured by store type.",
-                 "Pichincha (Quito) and Guayas (Guayaquil) dominate both the number of stores and the sales. Sized by sales, type A stores grow and type C/E stores shrink: format matters more than count.",
-                 "click a province to zoom in, click the top bar to zoom out; hover for type, cluster and sales.")
+                 "Pichincha (Quito) and Guayas (Guayaquil) have the most stores and the most sales. When sized by sales, type A stores get bigger and types C and E get smaller: the kind of store matters more than the number of stores.",
+                 "click a province to zoom in, and the top bar to zoom out; point at a box for details.")
     theme.chapter("1.5", "Store type against cluster")
     ct = pd.crosstab(s["cluster"], s["type"])
     fig = px.imshow(ct, text_auto=True, color_continuous_scale=theme.SEQUENTIAL_COOL, aspect="auto")
@@ -111,7 +111,7 @@ if True:  # stores.csv
     fig.update_traces(hovertemplate="cluster %{y}, type %{x}: %{z} stores<extra></extra>")
     theme.chart(fig, height=520)
     theme.figcap("1.5", "Count heatmap", "Number of stores for every cluster and store type.",
-                 "Nearly every cluster contains a single store type, so cluster is a finer split of type, not an independent property.",
+                 "Almost every cluster contains just one store type, so a cluster is really a smaller group within a type.",
                  "darker cells mean more stores.")
 
 # =================================================================== transactions
@@ -119,7 +119,7 @@ if True:  # stores.csv
 if True:  # transactions.csv
     sd = data.load("store_day")
     theme.chapter("1.6", "Where transaction records are missing",
-                  "A missing transaction record is <b>unknown</b>, not zero. The map shows where the gaps are: they are not random.")
+                  "A missing customer count means <b>we do not know</b>, not zero. The map shows where the gaps are, and they follow a pattern.")
     sd = sd.copy()
     sd["ym"] = sd["date"].dt.to_period("M").dt.to_timestamp()
     sd["missing"] = sd["transactions_original"].isna().astype(int)
@@ -132,9 +132,9 @@ if True:  # transactions.csv
     fig.update_layout(xaxis_title="", yaxis_title="Store", coloraxis_colorbar_title="days")
     theme.chart(fig, height=620)
     theme.figcap("1.6", "Heatmap, store × month",
-                 "Number of days per month on which a store has sales rows but no transaction record.",
-                 "Long dark bands belong to stores that had not opened yet (store 52 until April 2017, stores 20, 21, 22, 29, 42 until 2015). Short marks across all stores are 1 January and a few early-January days. "
-                 "Switch to 'positive sales' to see the 118 store-days where sales happened anyway: these need an estimate, not a zero.",
+                 "How many days each month a store has sales but no customer count.",
+                 "Long bands are stores that had not opened yet (store 52 until April 2017; stores 20, 21, 22, 29 and 42 until 2015). Short marks across all stores are 1 January and a few early-January days. "
+                 "Switch to 'Missing with positive sales' to see the 118 cases where sales happened with no count: these need an estimate, not a zero.",
                  "darker means more missing days in that month; hover for exact numbers.")
     theme.chapter("1.7", "Traffic by store type")
     obs = sd[sd["transactions_original"].notna()]
@@ -142,9 +142,9 @@ if True:  # transactions.csv
                     color_discrete_sequence=theme.COLORWAY, category_orders={"store_type": list("ABCDE")})
     fig.update_layout(showlegend=False, xaxis_title="Store type", yaxis_title="Transactions per store-day")
     theme.chart(fig, height=420)
-    theme.figcap("1.7", "Violin plot", "Distribution of observed transactions per store-day for each store type (10,000 sampled store-days).",
+    theme.figcap("1.7", "Violin plot", "How many customers a store serves per day, for each store type (10,000 randomly chosen days).",
                  "Type A stores serve about three times as many customers per day as type C (median 3,138 against 1,017). The wide shapes show that stores of one type still differ a lot.",
-                 "the width shows how common a value is; the inner box marks the median and middle half.")
+                 "the shape is wide where a number is common; the small box inside marks the typical range.")
 
 # =================================================================== oil
 
@@ -164,8 +164,8 @@ if True:  # oil.csv
     fig.update_layout(yaxis_title="USD per barrel", xaxis=dict(rangeslider=dict(visible=True, thickness=.06)))
     theme.chart(fig, height=460)
     theme.figcap("1.8", "Line chart with gap markers",
-                 "Daily WTI price. Gaps in the line are weekends; orange marks are weekdays with an empty price (US market holidays).",
-                 "From about 100 USD in mid-2014 the price fell to under 50 in early 2015 and to about 26 in early 2016. Every empty value sits on a closed-market day, so copying the last price forward is the correct fill.",
+                 "The oil price each day. Gaps in the line are weekends; orange marks are weekdays with no price because the US market was on holiday.",
+                 "The price fell from about 100 dollars in mid-2014 to under 50 in early 2015 and about 26 in early 2016. Every empty day is a day the market was closed, so using the last known price is the right fix.",
                  "drag the slider under the chart to zoom into a period.")
     full["weekday"] = full["date"].dt.day_name()
     wd = full[full["price"].isna()].groupby("weekday").size().reindex(WEEKDAYS, fill_value=0).reset_index(name="days")
@@ -192,10 +192,10 @@ if True:  # holidays_events.csv
     fig.update_layout(yaxis_title="", xaxis_title="", legend_title_text="")
     theme.chart(fig, height=430)
     theme.figcap("2.0", "Timeline (strip plot)",
-                 "Each mark is one record of holidays_events.csv, coloured by who it applies to; crosses are holidays that were moved to another date.",
-                 "The dense band of Events in April – May 2016 is the earthquake (Terremoto Manabi +1 … +30). Local holidays (orange) are city foundation days. "
-                 "A transferred holiday always has a matching 'Transfer' record on its new date.",
-                 "hover a mark for its name and place; use the selector to hide types.")
+                 "Each mark is one holiday or event, coloured by who it applies to. Crosses are holidays that were moved to another date.",
+                 "The dense band of events in April and May 2016 is the earthquake. Most local holidays are city foundation days. "
+                 "A holiday that was moved always has a matching record on its new date.",
+                 "point at a mark for its name and place; use the selector to hide types.")
     theme.chapter("2.1", "Transferred holidays: the pairs")
     moved = h[h["transferred"]][["date", "description", "locale_name"]].rename(columns={"date": "official date"})
     new = h[h["type"] == "Transfer"][["date", "description"]].rename(columns={"date": "celebrated on", "description": "transfer record"})
@@ -205,7 +205,7 @@ if True:  # holidays_events.csv
     pairs["official date"] = pairs["official date"].dt.strftime("%a %d %b %Y")
     pairs["celebrated on"] = pairs["celebrated on"].dt.strftime("%a %d %b %Y")
     st.dataframe(pairs, width="stretch", hide_index=True)
-    theme.figcap("2.2", "Table", "The 12 transferred holidays next to the 12 Transfer records, both sorted by date.",
-                 "Holidays falling mid-week are often moved next to a weekend. In the cleaned data the official date counts as a normal day and the new date as the holiday.", "")
+    theme.figcap("2.2", "Table", "The 12 holidays that were moved, next to the dates they were moved to.",
+                 "Holidays in the middle of the week are often moved next to a weekend. So the official date counts as a normal day, and the new date as the holiday.", "")
 
 theme.flow_next("views/eda_before.py")

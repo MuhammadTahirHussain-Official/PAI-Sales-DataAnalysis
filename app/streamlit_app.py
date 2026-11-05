@@ -37,7 +37,8 @@ technical = [
     st.Page("views/conclusion.py", title="Conclusion", url_path="conclusion"),
 ]
 business = [
-    st.Page("views/mgr_dashboard.py", title="Overview", url_path="manager"),
+    st.Page("views/mgr_stores.py", title="Choose a store", url_path="choose-store"),
+    st.Page("views/mgr_dashboard.py", title="Store overview", url_path="manager"),
     st.Page("views/mgr_products.py", title="Product calendar", url_path="manager-products"),
     st.Page("views/mgr_insights.py", title="Insights and actions", url_path="manager-insights"),
 ]

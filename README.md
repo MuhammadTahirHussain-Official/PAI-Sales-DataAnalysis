@@ -21,13 +21,16 @@ An interactive Streamlit report on the Kaggle **Store Sales – Time Series Fore
 | 7 | Features | The no-leakage rule, feature groups, correlation with the target, encoding |
 | 8 | Conclusion | Findings, what was done, limits, next step, download of the clean data |
 
-**Business overview**, for store managers and other non-technical users. It uses the structure of the team's manager prototype with real data for any of the 54 stores:
+**Business overview**, for store managers and other non-technical users. It uses the structure of the team's manager prototype with real data. You first choose one of the 54 stores, then see only that store:
 
 | Page | What it shows |
 | --- | --- |
-| Overview | One-sentence summary, key numbers, all 33 products (click one to drill down), day-by-day line, 12-month trend, monthly goal (8% above last year), best weekdays, products to watch, Excel order list |
+| Choose a store | All 54 stores, with city and type filters and sorting |
+| Store overview | One-sentence summary, key numbers, all 33 products (click one to drill down), day-by-day line, monthly goal (8% above last year), best weekdays, products to watch, Excel order list |
 | Product calendar | Colour calendar for one product; click a day to see why it was high or low and what to do |
-| Insights and actions | Prioritised next actions, promotion lift, holidays, weekends and payday, customers (observed vs filled), unusual days, comparison with region and chain averages |
+| Insights and actions | Prioritised next actions, promotion lift, holidays, weekends and payday, unusual days, comparison with region and chain averages |
+
+**Plain language.** Dotted words anywhere on the site open a short explanation when clicked: what it is, what it does, how it works and an example (`app/lib/glossary.py`). The chart studio has filters for dates, stores, places, products, kinds of day and number ranges, and rows can also be ticked by hand.
 
 Suggested orders exclude stock on hand because the data has no stock counts. Motion uses GSAP 3.13 (bundled in `app/static`, standard GSAP license).
 

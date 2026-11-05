@@ -44,9 +44,9 @@ gsap.timeline()
 </script></body></html>"""
 st.iframe(flow, height=280)
 theme.figcap("3.0", "Pipeline diagram",
-             "The four left joins of Part 1. The sales table stays the left side of every join.",
-             "The row count stays 3,000,888 after every join: no sales row was lost and none was duplicated. Joins with many_to_one validation would fail if a store, a store-day or a holiday store-day appeared twice on the right side.",
-             "read left to right; the dark box is the final merged table.")
+             "The four merges, one after another. The sales table is the main table every time, so no sales row can be lost.",
+             "The table stays at 3,000,888 rows after every merge: nothing lost and nothing doubled. If a store or a store-day appeared twice in a file, the many-to-one check would stop the merge with an error.",
+             "read left to right; the orange box is the final table.")
 
 theme.chapter("3.0", "Which file is merged on what",
               "Each join needs a column both tables share. The right column depends on what the file describes: one store, one store on one day, or one day.")
@@ -65,7 +65,7 @@ theme.ledger(
      ["Local", "<code>locale_name</code> = store <code>city</code>", "Stores in that city", "512"]])
 theme.prose("Two events can fall on the same store-day. They are combined into one row (for example <code>Holiday | Event</code>) before the merge, so the sales rows are never duplicated.")
 
-theme.chapter("3.1", "Checks made at every join")
+theme.chapter("3.1", "Checks made at every merge")
 theme.ledger(
     ["Join", "Rule", "Why it matters", "Result"],
     [["stores", "validate='many_to_one', indicator=True", "every store must exist exactly once in stores.csv", '<span class="ok">54 / 54 matched</span>'],
@@ -76,7 +76,7 @@ theme.ledger(
 
 # ------------------------------------------------------------------ missing after merge
 theme.chapter("3.2", "What was missing after the join",
-              "Joining never invents values: where the right-hand file had no match, the new columns are empty. These gaps are what Part 3 cleans.")
+              "A merge never invents values. Where a file had no matching row, the new columns stay empty. The cleaning step fixes these gaps.")
 miss = pd.DataFrame([
     {"column": k, "before": v, "after": C["missing"].get(k, 0)} for k, v in M.items() if v > 0
 ]).sort_values("before")

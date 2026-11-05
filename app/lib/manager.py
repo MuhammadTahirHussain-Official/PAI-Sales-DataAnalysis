@@ -50,18 +50,15 @@ def sg(v):
 def picker(with_store=True):
     """Store and month controls, remembered across the three manager pages."""
     ss = st.session_state
-    ss.setdefault("mgr_store", 44)
+    if "mgr_store" not in ss:
+        st.switch_page("views/mgr_stores.py")
     ss.setdefault("mgr_month", str(LAST - 1))
     per = pd.Period(ss["mgr_month"], "M")
     meta = data.stores().set_index("store_nbr")
 
     bar = st.container(key="mgrbar")
     c1, c3, c2, c4 = bar.columns([3, 1.2, .55, .55], vertical_alignment="bottom")
-    store = c1.selectbox("Your store", list(meta.index), index=list(meta.index).index(ss["mgr_store"]),
-                         format_func=lambda s: f"Store {s} · {meta.loc[s, 'city']}", key=f"store_{ss['mgr_store']}")
-    if store != ss["mgr_store"]:
-        ss["mgr_store"] = int(store)
-        st.rerun()
+    c1.page_link("views/mgr_stores.py", label=f"Store {ss['mgr_store']} · {meta.loc[ss['mgr_store'], 'city']} · change store", icon=":material/swap_horiz:")
     if c2.button("", icon=":material/chevron_left:", help="Previous month", disabled=per <= FIRST, width="stretch"):
         ss["mgr_month"] = str(per - 1)
         st.rerun()

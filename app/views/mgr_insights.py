@@ -1,7 +1,6 @@
 """Store manager: promotions, special days, customers, unusual days, store comparison, next actions."""
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -48,12 +47,6 @@ selling.loc[selling["is_event"] == 1, "kind"] = "Event day"
 selling.loc[selling["is_holiday"] == 1, "kind"] = "Holiday"
 kinds = selling.groupby("kind")["base"].mean().sort_values()
 
-month["customers"] = month["transactions"]
-real = month[month["transactions"] > 0]
-customers_day = real["transactions"].mean() if len(real) else 0
-units_customer = real["sales"].sum() / real["transactions"].sum() if len(real) else 0
-estimated = int((month["fill_method"] != "observed").sum())
-
 values = month["sales"]
 q1, q3 = values.quantile(.25), values.quantile(.75)
 low, high = q1 - 1.5 * (q3 - q1), q3 + 1.5 * (q3 - q1)
@@ -83,26 +76,19 @@ if "Payday (15th, month end)" in kinds:
     actions.append((theme.OCHRE, "Check payday staffing", "Medium", f"Paydays sell {kinds['Payday (15th, month end)'] - 100:+.0f}% against an average day at this store. Plan staff and stock from this number."))
 if lift is not None and len(lift):
     actions.append((theme.OCHRE, "Use promotions where they work", "Medium", f"Promotions lift {lift.index[0]} most ({m.sg(lift.iloc[0])}). Try the next promotion there, on a quiet weekday."))
-actions.append((theme.TEAL, "Improve customer counting", "Info", f"{estimated} of {n} days have an estimated or missing customer count. Real counts make staff plans more accurate." if estimated else f"All customer counts are real this month. Customers buy {units_customer:.1f} units per visit; a bundle offer could raise it."))
 theme.html("".join(f'<div class="action"><div class="bar" style="background:{c}"></div><div><b>{t}</b><span class="tag" style="color:{c}">{lv}</span><p>{txt}</p></div></div>' for c, t, lv, txt in actions))
 
 # ------------------------------------------------------------------ promotions
 theme.chapter("Promotions", "Promotion effectiveness", "Last 12 months at your store.")
 if has_promo and lift is not None and len(lift):
-    c1, c2 = st.columns(2)
-    with c1:
-        fig = px.box(year[year["ratio"].notna()], x="ratio", y="group", color="group", points=False,
-                     color_discrete_map={"Promoted": theme.PERSIMMON, "Not promoted": theme.SAND})
-        fig.update_layout(showlegend=False, xaxis_title="Sales compared with the product's average day (1 = average)", yaxis_title="", xaxis_range=[0, 4])
-        theme.chart(fig, height=320)
-        theme.figcap("I.1", "Box plot", "Promoted against not promoted days.", f"On promotion days products sold about {m.sg(promo_lift)} compared with other days. Part of this is because stores promote what already sells well.", "the box holds the middle half of days; the line is the typical day.")
-    with c2:
-        view = lift.sort_values()
-        fig = go.Figure(go.Bar(x=view.values, y=view.index, orientation="h", marker_color=[theme.PERSIMMON if v > 0 else theme.CORAL for v in view.values],
-                               text=[m.sg(v) for v in view.values], textposition="outside", cliponaxis=False, hovertemplate="%{y}: %{x:+.0%}<extra></extra>"))
-        fig.update_layout(xaxis_tickformat="+.0%", xaxis_title="Sales lift on promotion days", margin=dict(r=60))
-        theme.chart(fig, height=320)
-        theme.figcap("I.2", "Bar chart", "Sales lift by product, biggest products.", f"Best result: {lift.index[0]} ({m.sg(lift.iloc[0])}). Products on promotion almost every day are left out because there is nothing to compare them with.", "")
+    view = lift.sort_values()
+    fig = go.Figure(go.Bar(x=view.values, y=view.index, orientation="h", marker_color=[theme.PERSIMMON if v > 0 else theme.CORAL for v in view.values],
+                           text=[m.sg(v) for v in view.values], textposition="outside", cliponaxis=False, hovertemplate="%{y}: %{x:+.0%}<extra></extra>"))
+    fig.update_layout(xaxis_tickformat="+.0%", xaxis_title="How much more sold on promotion days", margin=dict(r=60))
+    theme.chart(fig, height=max(260, 44 * len(view)))
+    theme.figcap("I.1", "Bar chart", "How much more each big product sold on promotion days.",
+                 f"Best result: {lift.index[0]} ({m.sg(lift.iloc[0])}). Overall, products sold about {m.sg(promo_lift)} on promotion days, partly because stores promote what already sells well. "
+                 "Products on promotion almost every day are left out, because there is nothing to compare them with.", "")
 else:
     theme.html(theme.card("Promotions", "No promotions recorded", "Promotions are recorded from 2014. Choose a later month."))
 
@@ -115,7 +101,7 @@ with c1:
     fig.add_vline(x=100, line=dict(color=theme.INK, width=1, dash="dot"))
     fig.update_layout(xaxis_title="% of an average day", margin=dict(r=60))
     theme.chart(fig, height=340)
-    theme.figcap("I.3", "Bar chart", "Sales on each type of day.", f"{kinds.index[-1]} is your strongest kind of day; {kinds.index[0]} the weakest.", "right of the dotted line means above an average day.")
+    theme.figcap("I.2", "Bar chart", "Sales on each type of day.", f"{kinds.index[-1]} is your strongest kind of day; {kinds.index[0]} the weakest.", "right of the dotted line means above an average day.")
 with c2:
     dec_year = per.year if per.month == 12 else per.year - 1
     dec = days[(days["date"] >= f"{dec_year}-12-15") & (days["date"] <= f"{dec_year}-12-31")]
@@ -125,20 +111,9 @@ with c2:
                                    hovertemplate="%{x|%a %d %b}<br>%{y:.0f}% of a normal November day<extra></extra>"))
         fig.update_layout(yaxis_title="% of a normal November day", yaxis_rangemode="tozero")
         theme.chart(fig, height=340)
-        theme.figcap("I.4", "Line chart", f"Late December {dec_year} at your store.", f"The highest day was {dec.loc[dec['sales'].idxmax(), 'date']:%A %d December}. There is no 25 December because stores are closed. Stock up before the peak.", "")
+        theme.figcap("I.3", "Line chart", f"Late December {dec_year} at your store.", f"The highest day was {dec.loc[dec['sales'].idxmax(), 'date']:%A %d December}. There is no 25 December because stores are closed. Stock up before the peak.", "")
     else:
         theme.html(theme.card("Christmas", "Available from December 2013", "This store has no earlier December in the data."))
-
-# ------------------------------------------------------------------ customers
-theme.chapter("Customers", "Customers and transactions")
-theme.stats([(fmt(customers_day), "customers per day", "days with a count"), (f"{units_customer:.1f}", "units per customer"),
-             (f"{estimated} of {n}", "days estimated or zero-filled", "", "bad" if estimated else "good")])
-fig = go.Figure(go.Bar(x=month["date"], y=month["transactions"], marker_color=[theme.TEAL if f == "observed" else theme.OCHRE for f in month["fill_method"]],
-                       customdata=["observed" if f == "observed" else "estimated" for f in month["fill_method"]],
-                       hovertemplate="%{x|%a %d %b}<br>%{y:,} customers (%{customdata})<extra></extra>"))
-fig.update_layout(yaxis_title="Customers (receipts)", bargap=.2)
-theme.chart(fig, height=300)
-theme.figcap("I.5", "Bar chart", f"Customers per day, {month_name}.", "Blue days were really counted. Yellow days were missing in the source and filled during cleaning.", "")
 
 # ------------------------------------------------------------------ unusual days
 theme.chapter("Unusual days", "Unusual sales days")
@@ -148,7 +123,7 @@ if len(flags):
     fig.add_trace(go.Scatter(x=flags["date"], y=flags["sales"], mode="markers", marker=dict(size=13, color=theme.CORAL, symbol="circle-open", line=dict(width=2.5)), showlegend=False, hoverinfo="skip"))
 fig.update_layout(yaxis_title="Units sold", yaxis_rangemode="tozero")
 theme.chart(fig, height=320)
-theme.figcap("I.6", "Line chart", f"{len(flags)} unusual day(s) in {month_name}" + (f", {len(unexplained)} without a known reason." if len(flags) else "."),
+theme.figcap("I.4", "Line chart", f"{len(flags)} unusual day(s) in {month_name}" + (f", {len(unexplained)} without a known reason." if len(flags) else "."),
              "A day is flagged when it is far outside the normal range of this month (circled in red).", "")
 if len(flags):
     theme.html("".join(f'<div class="mv"><span><b>{r.date:%a %b %d}</b> · {fmt(r.sales)} units</span><span>{("Explained: " + theme.esc(r.known)) if r.known else "Investigate: no holiday or event on this day. Check stock, staff notes or a bulk order."}</span></div>' for r in flags.itertuples()))

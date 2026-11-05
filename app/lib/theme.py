@@ -1,10 +1,14 @@
 """Visual system: charcoal glass panels, one ember accent, GSAP motion, Plotly template."""
 import html as _html
+import json
+import re
 from pathlib import Path
 
 import plotly.graph_objects as go
 import plotly.io as pio
 import streamlit as st
+
+from lib.glossary import GLOSSARY, WORD_TO_KEY
 
 # Names kept simple: PAPER = page colour, INK = text colour
 PAPER = "#0E0F11"
@@ -55,6 +59,7 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {{ background: {PAPER}; }
 [data-testid="stHeader"] {{ display:none; }}
 [data-testid="stVerticalBlock"] {{ gap:1.5rem; }}
 [data-testid="stHorizontalBlock"] {{ gap:1.5rem !important; }}
+@media (min-width:641px) {{ [data-testid="stHorizontalBlock"] {{ flex-wrap:nowrap; }} [data-testid="stColumn"] {{ min-width:0 !important; }} }}
 .st-key-fx {{ position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; pointer-events:none; }}
 
 /* every chart sits in its own glass panel with air around it */
@@ -190,6 +195,44 @@ footer {{ visibility:hidden; }}
 #fx-bar {{ position:fixed; left:0; top:0; height:3px; width:100%; background:{PERSIMMON}; transform:scaleX(0); transform-origin:left; z-index:1000000; pointer-events:none; }}
 #fx-ring {{ position:fixed; left:-18px; top:-18px; width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,138,76,.75); pointer-events:none; z-index:1000000; opacity:0; will-change:transform; transition:width .2s, height .2s, left .2s, top .2s, background .2s; }}
 #fx-ring.hot {{ width:58px; height:58px; left:-29px; top:-29px; background:rgba(255,138,76,.14); }}
+/* dotted words explain themselves when clicked */
+.term {{ border-bottom:1px dotted {PERSIMMON}; cursor:help; transition:color .2s; }}
+.term:hover {{ color:{PERSIMMON}; }}
+.ctl-label {{ font-family:{FONT_MONO}; font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:{INK_2}; margin-bottom:-.9rem; }}
+#term-pop {{ position:fixed; left:50%; bottom:28px; width:min(560px, calc(100vw - 28px)); max-height:calc(100vh - 90px); overflow-y:auto; transform:translateX(-50%); z-index:1000001; background:#1A1B20; border:1px solid {PERSIMMON}; border-radius:20px; padding:1.4rem 1.5rem; box-shadow:0 30px 80px rgba(0,0,0,.7); color:{INK_2}; font-family:{FONT_BODY}; display:none; }}
+#term-pop h3 {{ margin:0 2rem .7rem 0; font-family:{FONT_DISPLAY}; font-size:1.5rem; font-weight:500; color:{INK}; letter-spacing:-.02em; }}
+#term-pop h5 {{ margin:.8rem 0 .15rem; font-family:{FONT_MONO}; font-size:.66rem; font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:{PERSIMMON}; }}
+#term-pop p {{ margin:0; font-size:.97rem; line-height:1.55; }}
+#term-pop button {{ position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,.25); background:none; color:{INK}; font-size:18px; line-height:1; cursor:pointer; }}
+#term-pop button:hover {{ border-color:{PERSIMMON}; color:{PERSIMMON}; }}
+
+/* product bars: rounded gradient bars, numbers in straight columns */
+.pbars {{ {GLASS} padding:1rem 1.3rem 1.1rem; }}
+.pbar {{ display:grid; grid-template-columns:minmax(120px,190px) minmax(0,1fr) 84px 62px; gap:14px; align-items:center; padding:5px 8px; border-radius:10px; cursor:pointer; transition:background .2s; }}
+.pbar:hover {{ background:rgba(255,255,255,.06); }}
+.pbar.sel {{ background:rgba(255,138,76,.14); outline:1px solid rgba(255,138,76,.55); }}
+.pbar.head {{ cursor:default; font-family:{FONT_MONO}; font-size:.64rem; letter-spacing:.1em; text-transform:uppercase; color:{MUTED}; }}
+.pbar.head:hover {{ background:none; }}
+.pbar .nm {{ font-size:.93rem; color:{INK}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
+.pbar .tr {{ height:14px; border-radius:99px; background:rgba(255,255,255,.06); overflow:hidden; }}
+.pbar .tr i {{ display:block; height:100%; border-radius:99px; box-shadow:inset 0 1px 0 rgba(255,255,255,.28); transform-origin:left; animation:pgrow .9s cubic-bezier(.2,.7,.1,1) both; }}
+@keyframes pgrow {{ from {{ transform:scaleX(0); }} to {{ transform:scaleX(1); }} }}
+.pbar .num {{ text-align:right; font-family:{FONT_MONO}; font-size:.85rem; color:{INK}; font-variant-numeric:tabular-nums; }}
+.pbar .chg {{ text-align:right; font-family:{FONT_MONO}; font-size:.8rem; font-variant-numeric:tabular-nums; color:{MUTED}; }}
+.g-top {{ background:linear-gradient(90deg,#B4552A,#FF8A4C 62%,#F2D479); }}
+.g-down {{ background:linear-gradient(90deg,#7E332E,#D65F55 60%,#F0918A); }}
+.g-up {{ background:linear-gradient(90deg,#2B5560,#5F99AB 60%,#A3D3E2); }}
+.st-key-pickers {{ position:absolute; width:1px; height:1px; overflow:hidden; opacity:0; pointer-events:none; }}
+@media (max-width:640px) {{ .pbar {{ grid-template-columns:minmax(0,104px) minmax(0,1fr) 56px 42px; gap:8px; padding:5px 2px; }} .pbar .nm {{ font-size:.8rem; }} .pbar .num {{ font-size:.74rem; }} .pbar .chg {{ font-size:.68rem; }} .pbars {{ padding:.8rem .7rem; }} }}
+
+/* store chooser */
+.st-key-storegrid {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:18px; }}
+.st-key-storegrid [data-testid="stElementContainer"] {{ width:auto !important; }}
+.st-key-storegrid button {{ {GLASS} width:100%; min-height:118px; justify-content:flex-start; text-align:left; padding:1rem 1.15rem; border-radius:18px !important; transition:transform .3s cubic-bezier(.2,.7,.1,1), border-color .3s, background .3s; }}
+.st-key-storegrid button:hover {{ transform:translateY(-4px); border-color:{PERSIMMON} !important; background:rgba(255,138,76,.09); color:inherit !important; }}
+.st-key-storegrid button > div, .st-key-storegrid button [data-testid="stMarkdownContainer"] {{ width:100%; display:block; text-align:left; }}
+.st-key-storegrid button p {{ text-align:left; font-size:.9rem; line-height:1.5; color:{INK_2}; }}
+.st-key-storegrid button strong {{ display:block; font-family:{FONT_DISPLAY}; font-size:1.3rem; font-weight:500; letter-spacing:-.02em; color:{INK}; margin-bottom:.2rem; }}
 .flow {{ margin:0 0 .2rem; }}
 .flow-t {{ font-family:{FONT_MONO}; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:{INK_2}; margin-bottom:.55rem; }}
 .flow-b {{ display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:6px; }}
@@ -286,6 +329,29 @@ REVEAL = """
     const title = doc.querySelector('.page-title');
     if (title && !reduced) { const y = main.scrollTop; title.style.transform = 'translateY(' + y * .22 + 'px)'; title.style.opacity = Math.max(0, 1 - y / 480); }
   }, {signal: win.__fx.signal, passive: true, capture: true});
+
+  // clicking a dotted word opens its explanation; clicking a product row presses its hidden button
+  const pop = doc.getElementById('term-pop') || doc.body.appendChild(doc.createElement('div'));
+  pop.id = 'term-pop';
+  function hidePop() { pop.style.display = 'none'; }
+  function showPop(key) {
+    const g = GLOSSARY[key];
+    if (!g) return;
+    pop.innerHTML = '<button aria-label="Close">×</button><h3>' + g[1] + '</h3><h5>What it is</h5><p>' + g[2] + '</p><h5>What it does</h5><p>' + g[3] +
+      '</p><h5>How it works</h5><p>' + g[4] + '</p><h5>Example</h5><p>' + g[5] + '</p>';
+    pop.style.display = 'block';
+    gsap.fromTo(pop, {opacity: 0, y: 24}, {opacity: 1, y: 0, duration: .35, ease: 'power3.out'});
+  }
+  doc.addEventListener('click', function (e) {
+    const t = e.target;
+    if (!t.closest) return;
+    const term = t.closest('.term');
+    if (term) { e.preventDefault(); e.stopPropagation(); showPop(term.dataset.term); return; }
+    if (t.closest('#term-pop button') || !t.closest('#term-pop')) hidePop();
+    const row = t.closest('[data-click]');
+    if (row) { const b = doc.querySelector('.st-key-' + row.dataset.click + ' button'); if (b) b.click(); }
+  }, {signal: win.__fx.signal, capture: true});
+  doc.addEventListener('keydown', function (e) { if (e.key === 'Escape') hidePop(); }, {signal: win.__fx.signal});
 
   // menu: closes after a link is clicked, opens and closes by tapping on touch screens
   doc.addEventListener('click', function (e) {
@@ -398,7 +464,7 @@ def flow_next(path):
         st.page_link(TECH_FLOW[i + 1][0], label=f"Continue to {TECH_FLOW[i + 1][1]}", icon=":material/arrow_forward:")
     else:
         html('<div class="nextcard"><div class="eyebrow">End of the technical overview</div><h3>That is the whole project.</h3></div>')
-        st.page_link("views/mgr_dashboard.py", label="See the business overview", icon=":material/arrow_forward:")
+        st.page_link("views/mgr_stores.py", label="See the business overview", icon=":material/arrow_forward:")
     if i > 0:
         st.page_link(TECH_FLOW[i - 1][0], label=f"Back to {TECH_FLOW[i - 1][1]}", icon=":material/arrow_back:")
 
@@ -425,7 +491,7 @@ FIT = """<script>
 def apply():
     st.markdown(CSS, unsafe_allow_html=True)
     with st.container(key="fx"):
-        st.iframe(gsap_scripts() + REVEAL, height=1)
+        st.iframe(gsap_scripts() + "<script>const GLOSSARY = " + json.dumps(GLOSSARY) + ";</script>" + REVEAL, height=1)
     pio.templates["ledger"] = _template()
     pio.templates.default = "ledger"
 
@@ -440,7 +506,7 @@ def _template():
         xaxis=axis, yaxis=axis,
         hoverlabel=dict(bgcolor="#1F2024", bordercolor=PERSIMMON, font=dict(family=FONT_MONO, color=INK, size=12)),
         legend=dict(orientation="h", y=1.1, x=0, font=dict(size=12, color=INK_2), bgcolor="rgba(0,0,0,0)", title=dict(text="")),
-        margin=dict(l=10, r=14, t=44, b=10), hovermode="closest",
+        margin=dict(l=10, r=14, t=44, b=10), hovermode="closest", barcornerradius=6,
         coloraxis=dict(colorscale=SEQUENTIAL, colorbar=dict(outlinewidth=0, tickfont=dict(family=FONT_MONO, size=10, color=INK_2))),
     )
     return t
@@ -450,12 +516,43 @@ PLOT_CONFIG = {"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "sele
                "toImageButtonOptions": {"format": "png", "scale": 2}}
 
 
+_TERM_RE = re.compile(r"(?<![\w-])(" + "|".join(re.escape(w) for w in sorted(WORD_TO_KEY, key=len, reverse=True)) + r")(?![\w-])", re.I)
+_SKIP_TAGS = ("code", "a", "button", "h1", "h2", "h3", "h4", "th", "svg", "style", "script")
+
+
+def glossify(markup):
+    """Make the first use of each known word in this block clickable."""
+    seen, depth, out = set(), 0, []
+    for part in re.split(r"(<[^>]+>)", markup):
+        if part.startswith("<"):
+            name = re.match(r"</?\s*([a-zA-Z0-9]+)", part)
+            if name and name.group(1).lower() in _SKIP_TAGS and not part.endswith("/>"):
+                depth += -1 if part.startswith("</") else 1
+            out.append(part)
+        elif depth > 0:
+            out.append(part)
+        else:
+            def wrap(m):
+                key = WORD_TO_KEY[m.group(1).lower()]
+                if key in seen or key in ("dataset_row", "column"):
+                    return m.group(1)
+                seen.add(key)
+                return f'<span class="term" data-term="{key}">{m.group(1)}</span>'
+            out.append(_TERM_RE.sub(wrap, part))
+    return "".join(out)
+
+
+def label(text, term):
+    """A control label that explains itself when clicked."""
+    st.markdown(f'<div class="ctl-label"><span class="term" data-term="{term}">{text}</span></div>', unsafe_allow_html=True)
+
+
 def esc(text):
     return _html.escape(str(text))
 
 
 def html(markup):
-    st.markdown(markup, unsafe_allow_html=True)
+    st.markdown(glossify(markup), unsafe_allow_html=True)
 
 
 def page_title(eyebrow, title_html, lede):
@@ -493,7 +590,7 @@ def insight(title, text):
 
 
 def card(meta, title, text):
-    return f'<div class="card"><div class="meta">{meta}</div><h4>{title}</h4><p>{text}</p></div>'
+    return glossify(f'<div class="card"><div class="meta">{meta}</div><h4>{title}</h4><p>{text}</p></div>')
 
 
 def ledger(headers, rows, numeric_cols=()):

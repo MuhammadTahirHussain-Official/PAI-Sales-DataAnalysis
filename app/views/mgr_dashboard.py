@@ -1,6 +1,7 @@
 """Store manager: what happened in my store this month, in plain words."""
 import io
 
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -10,8 +11,8 @@ from lib import theme
 from lib.data import WEEKDAYS
 from lib.theme import fmt
 
-theme.page_title("For store managers", "Business <em>overview</em>",
-                 "Choose your store and month. Real sales from the cleaned data, explained without any technical words.")
+theme.page_title("Business overview", "Your <em>store</em>",
+                 "Choose a month to see how this store did, in plain words.")
 store, per, name = m.picker()
 rows, days = m.store_rows(store), m.store_days(store)
 now, last = rows[rows["month"] == per], rows[rows["month"] == per - 1]
@@ -52,22 +53,28 @@ theme.stats([
 
 # ------------------------------------------------------------------ products
 theme.chapter("What sold", "What each product sold")
-view = tab.iloc[::-1]
-colors = [theme.CORAL if pd.notna(c) and c < 0 else theme.PERSIMMON if p in tab.index[:3] else theme.TEAL for p, c in zip(view.index, view["change"])]
-labels = [f"{fmt(u)}  {m.sg(c) if pd.notna(c) else ''}" for u, c in zip(view["units"], view["change"])]
-fig = go.Figure(go.Bar(x=view["units"], y=view.index, orientation="h", marker_color=colors, text=labels, textposition="outside", cliponaxis=False,
-                       hovertemplate="%{y}<br>%{x:,.0f} units<extra></extra>"))
-fig.update_xaxes(type="log", title="Units sold this month (log scale, so small products stay visible)")
-fig.update_layout(yaxis=dict(dtick=1), margin=dict(r=110))
-event = theme.chart(fig, key=f"bars_{store}_{per}", select=True, height=860)
+top = np.log10(tab["units"].max() + 1)
+rows_html = '<div class="pbar head"><span>Product</span><span></span><span class="num" style="color:inherit;font-size:inherit">Units</span><span class="chg">Change</span></div>'
+for i, (name_, row) in enumerate(tab.iterrows()):
+    falling = pd.notna(row["change"]) and row["change"] < 0
+    grad = "g-down" if falling else "g-top" if i < 3 else "g-up"
+    width = max(np.log10(row["units"] + 1) / top * 100, 1.5)
+    change = m.sg(row["change"]) if pd.notna(row["change"]) else "–"
+    tone = "" if pd.isna(row["change"]) else ("down" if falling else "up")
+    rows_html += (f'<div class="pbar{" sel" if name_ == product else ""}" data-click="pick_{i}"><span class="nm" title="{name_}">{name_}</span>'
+                  f'<span class="tr"><i class="{grad}" style="width:{width:.1f}%;animation-delay:{i * 18}ms"></i></span>'
+                  f'<span class="num">{fmt(row["units"])}</span><span class="chg {tone}">{change}</span></div>')
+st.markdown(f'<div class="pbars">{rows_html}</div>', unsafe_allow_html=True)
+with st.container(key="pickers"):
+    for i, name_ in enumerate(tab.index):
+        if st.button(name_, key=f"pick_{i}"):
+            st.session_state["mgr_product"] = name_
+            st.rerun()
+theme.html('<div class="legend"><span><i class="g-top"></i>Top 3 sellers</span><span><i class="g-down"></i>Sold less per day than last month</span><span><i class="g-up"></i>Holding or growing</span></div>')
 theme.figcap("M.1", "Ranked bars", "All 33 products, best seller at the top.",
-             "Orange = top 3. Red = sold less per day than last month. Blue = everything else. The percentage compares units per day with last month.",
+             "A longer bar means more units sold. Bars are drawn on a compressed scale so that small products stay visible, so read the numbers for exact amounts. "
+             "The last column compares units per day with last month.",
              "click a product to see it day by day below.")
-points = event.selection.points if event and event.selection else []
-if points and points[0]["y"] != st.session_state.get("mgr_click"):
-    st.session_state["mgr_click"] = points[0]["y"]
-    st.session_state["mgr_product"] = points[0]["y"]
-    st.rerun()
 
 # ------------------------------------------------------------------ day by day
 theme.chapter("Day by day", "Sales day by day")
@@ -88,21 +95,8 @@ fig.add_trace(go.Scatter(x=[worst_day], y=[daily.min()], mode="markers+text", te
                          textfont=dict(color=theme.OCHRE), hoverinfo="skip", showlegend=False))
 fig.update_layout(yaxis_title="Units sold", xaxis_title="", yaxis_rangemode="tozero")
 theme.chart(fig, height=380)
-theme.figcap("M.2", "Line chart", f"Units sold each day in {month_name}: {product.lower() if product != 'All products' else 'all products'}.",
+theme.figcap("M.2", "Day by day", f"Units sold each day in {month_name}: {product.lower() if product != 'All products' else 'all products'}.",
              f"Lighter stripes are weekends. Best day: {best_day:%A} {best_day.day}. Slowest: {worst_day:%A} {worst_day.day}.", "higher means more units sold that day; hover for any day.")
-
-# ------------------------------------------------------------------ year trend
-start = per - 11
-months = sel[(sel["month"] >= start) & (sel["month"] <= per)].groupby("month").agg(units=("sales", "sum"), dates=("date", "nunique"))
-months["per_day"] = months["units"] / months["dates"]
-ly = sel[sel["month"] == per - 12]
-yoy = (total / n_days) / (ly["sales"].sum() / ly["date"].nunique()) - 1 if len(ly) and ly["sales"].sum() > 0 else None
-fig = go.Figure(go.Scatter(x=[f"{m.MONTHS[p.month - 1]} {str(p.year)[2:]}" for p in months.index], y=months["per_day"], mode="lines+markers",
-                           line=dict(color=theme.TEAL, width=2.5), marker=dict(size=7), hovertemplate="%{x}<br>%{y:,.0f} units per day<extra></extra>"))
-fig.update_layout(yaxis_title="Units per day", yaxis_rangemode="tozero")
-theme.chart(fig, height=300)
-theme.figcap("M.3", "Line chart", "Average units per day, last 12 months.",
-             "A rising line means growing." + (f" Versus {m.MONTHS[per.month - 1]} {per.year - 1}: {m.sg(yoy)}." if yoy is not None else ""), "")
 
 # ------------------------------------------------------------------ quick insights and goal
 whole = now.groupby("date")["sales"].sum()
@@ -140,7 +134,7 @@ with c1:
                            hovertemplate="%{x}<br>%{y:,.0f} units on average<extra></extra>"))
     fig.update_layout(yaxis_title="Average units")
     theme.chart(fig, height=320)
-    theme.figcap("M.4", "Bar chart", "Average units per weekday this month.",
+    theme.figcap("M.3", "Bar chart", "Average units per weekday this month.",
                  f"{top_day} is the busiest, {(wk.max() / whole.mean() - 1) * 100:.0f}% above an average day. Schedule more staff and restock the day before.", "")
 with c2:
     theme.chapter("Reorder", "Products to watch")

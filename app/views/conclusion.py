@@ -28,7 +28,7 @@ theme.chapter("What we did", "From raw files to model-ready")
 theme.ledger(["Step", "What happened", "Result"], [
     ["Raw data", "Five Kaggle files read and described", f"{S['raw']['train']['rows']:,} sales rows"],
     ["Merging", "Four left joins, each checked", "Row count unchanged, 6 to 17 columns"],
-    ["EDA before cleaning", "Distributions, gaps and outliers explored", "Skewness 7.36, gaps explained"],
+    ["EDA before cleaning", "Distributions, gaps and outliers explored", "Most rows sell little, a few sell a lot; gaps explained"],
     ["Cleaning", "Every gap filled by a written rule", f"0 missing values, {checks} of {len(S['integrity'])} integrity checks pass"],
     ["Validation", "4 Pydantic models and pandas assertions", f"{records:,} records, 0 errors"],
     ["EDA after cleaning", "Time, holidays, products, stores, promotions, oil", "Findings above"],

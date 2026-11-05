@@ -12,7 +12,7 @@ theme.flow_top("views/explore.py")
 theme.page_title(
     "Technical overview",
     "EDA <em>after cleaning</em>",
-    "Ten questions, each with its own charts and controls, all on this page. Hover any chart for exact values. On the time series, "
+    "Ten questions, each with its own charts and controls, all on this page. Point at any chart for exact values. On the time series, "
     "click a point to get a summary of that day: how it compares with the days around it, and the most likely reasons.")
 
 store_day = data.load("store_day")
@@ -105,9 +105,9 @@ def ch_time():
     event = theme.chart(fig, key=f"ts_{scope}_{value}_{metric}_{smooth}_{rng}", select=True, height=440)
     theme.figcap("5.1", "Interactive time series",
                  f"{data.label(metric)} per day for {scope_text}{', ' + smooth + ' average' if smooth != 'None' else ''}. Open orange circles mark holidays and events.",
-                 "Sales follow a strong weekly wave, rise every December, fall to almost nothing every 1 January and grow year after year. "
-                 "Choose a store, city or family to see how its own pattern differs, and click any point for an explanation.",
-                 "hover a point for its exact value and any holiday on that day; click it for the summary below.")
+                 "Sales go up and down every week, rise every December, fall to almost nothing every 1 January, and grow year after year. "
+                 "Choose a store, city or product to see its own pattern, and click any point for an explanation.",
+                 "point at a dot for its exact value and any holiday that day; click it for the summary below.")
 
     if event and event.selection and event.selection.points:
         st.session_state["ts_selected"] = event.selection.points[0]["x"]
@@ -120,8 +120,8 @@ def ch_time():
         f2.update_layout(yaxis_title=data.label(metric), bargap=.15)
         theme.chart(f2, height=260, key="ts_zoom")
         theme.figcap("5.2", "Zoom around the clicked day",
-                     f"Three weeks either side of {when:%d %b %Y}. The clicked day is persimmon, weekends ochre.",
-                     "Use this to see whether the clicked value is part of the weekly rhythm or a real break from it.", "")
+                     f"Three weeks either side of {when:%d %b %Y}. The clicked day is orange and weekends are yellow.",
+                     "This shows whether the day is part of the normal weekly pattern, or really stands out.", "")
         if st.button("Clear selection"):
             st.session_state.pop("ts_selected", None)
             st.rerun(scope="fragment")
@@ -147,22 +147,22 @@ def ch_rhythm():
     theme.chart(fig, height=420)
     theme.figcap("5.3", "Heatmap, weekday × month",
                  f"Average {data.label(metric).lower()} per selling store-day for {('all stores' if scope == 'All stores' else scope.lower() + ' ' + str(value))}, in the selected years.",
-                 "The darkest band is Sunday and Saturday in every month; December is the darkest column. Thursday is the weakest day of the week. "
-                 "The weekly pattern is far stronger than the monthly one, except in December.",
-                 "darker cells mean more; hover for the exact average.")
+                 "Saturdays and Sundays are the strongest in every month, and December is the strongest month. Thursday is the weakest day. "
+                 "The day of the week matters far more than the month, except in December.",
+                 "brighter squares mean more; point at one for its exact average.")
     prof = sub.groupby(["year", "weekday"])[metric].mean().reset_index()
     fig = px.line(prof, x="weekday", y=metric, color=prof["year"].astype(str), markers=True,
                   category_orders={"weekday": WEEKDAYS}, color_discrete_sequence=theme.COLORWAY)
     fig.update_layout(yaxis_title=data.label(metric), xaxis_title="", legend_title_text="")
     theme.chart(fig, height=360)
-    theme.figcap("5.4", "Weekday profile per year", "Average per selling store-day for each weekday, one line per year.",
-                 "Every year has the same shape: a dip mid-week and a weekend peak. The lines move up over time because the business grew, but the shape stays.", "")
+    theme.figcap("5.4", "Weekday profile per year", "Average for each weekday, one line per year.",
+                 "Every year has the same shape: a dip mid-week and a peak at the weekend. The lines move up over time because the business grew.", "")
 
 # =================================================================== holidays
 @st.fragment
 def ch_holidays():
     theme.chapter("5.5", "Do holidays change sales?",
-                  "Each store-day gets one kind: national, regional or local holiday, event, work day or normal day. Only selling store-days are compared.")
+                  "Each day at each store is labelled as a holiday, an event, a Work Day or a normal day. Days when a store sold nothing are left out.")
     c1, c2, c3 = st.columns(3)
     metric = c1.selectbox("Metric", ["sales", "transactions_original", "promotions"], format_func=data.label, key="h_m")
     stat = c2.segmented_control("Statistic", ["mean", "median"], default="mean", key="h_s") or "mean"
@@ -188,11 +188,11 @@ def ch_holidays():
     theme.chart(fig, height=400)
     theme.figcap("5.5", "Bar chart with baseline",
                  f"{stat.capitalize()} {data.label(metric).lower()} per selling store-day by kind of day; labels show the change against a normal day (dotted line).",
-                 "National holidays lift sales by about a quarter and events by about a sixth. Work Days sit close to normal days, as they should. Regional holidays have only 28 store-days, too few to judge.",
-                 "hover a bar for the number of store-days behind it.")
+                 "National holidays sell about a quarter more than normal days, and events about a sixth more. Work Days are close to normal, as expected. Regional holidays happen too rarely to judge.",
+                 "point at a bar to see how many days it is based on.")
 
     theme.chapter("5.6", "Which holidays matter most",
-                  "For every national holiday or event, total sales on the day are compared with the same weekday in the four weeks before and after. That removes the weekly rhythm.")
+                  "Each holiday is compared with the same weekday in the four weeks around it, so a Sunday holiday is compared with other Sundays.")
     ds = daily.set_index("date")["sales"]
     nat = hol[(hol["active"]) & (hol["locale"] == "National") & (hol["date"].isin(ds.index))].copy()
     lifts = []
@@ -212,11 +212,11 @@ def ch_holidays():
     fig.update_layout(xaxis_tickformat="+.0%", xaxis_title="Change in total daily sales vs the same weekday nearby", yaxis_title="",
                       legend_title_text="")
     theme.chart(fig, height=max(420, 22 * len(agg)))
-    theme.figcap("5.6", "Diverging bar chart",
+    theme.figcap("5.6", "Bars left and right of zero",
                  "Average change in total daily sales on each national holiday or event, compared with the same weekday in the surrounding four weeks.",
                  "The Christmas days (Navidad, about +36% over 20 days) and Labour Day (+48%) lift sales most. 1 January is the deepest drop (−39%): stores close. "
                  "Ecuador's 2014 World Cup matches cut sales by 17 – 35% while people watched, and Black Friday and Mother's Day are slightly below a normal day of the same weekday.",
-                 "bars right of the line are above a normal day of the same weekday.")
+                 "bars to the right sold more than a normal day, and bars to the left sold less.")
 
     theme.chapter("5.7", "The countdown to Christmas")
     dd = daily[daily["date"].dt.month.isin([11, 12])].copy()
@@ -227,13 +227,13 @@ def ch_holidays():
     fig.update_layout(xaxis=dict(autorange="reversed", title="Days until 25 December"), yaxis_title="Total sales per day", legend_title_text="")
     theme.chart(fig, height=380)
     theme.figcap("5.7", "Line chart, days to Christmas", "Total daily sales in the 45 days before Christmas, one line per year.",
-                 "Sales climb steadily through December and peak on 23 December, two days before Christmas. The weekly wave continues underneath the climb.",
-                 "the x-axis counts down to Christmas from left to right.")
+                 "Sales climb through December and peak on 23 December, two days before Christmas. The weekly up and down continues during the climb.",
+                 "reading left to right counts down to Christmas.")
 
 # =================================================================== families
 @st.fragment
 def ch_families():
-    theme.chapter("5.8", "What sells, and how each family moves")
+    theme.chapter("5.8", "What sells, and how each product changes")
     fams = sorted(family_day["family"].unique())
     c1, c2, c3 = st.columns([2, 1, 1])
     pick = c1.multiselect("Families", fams, default=["GROCERY I", "BEVERAGES", "PRODUCE", "CLEANING", "DAIRY"])
@@ -253,11 +253,11 @@ def ch_families():
                       yaxis_tickformat=".0%" if norm == "Share of total" else None, xaxis_title="", legend_title_text="")
     theme.chart(fig, height=440)
     theme.figcap("5.8", "Multi-line chart", f"{freq}ly sales of the selected families, shown as {norm.lower()}.",
-                 "'Index' puts small and large families on one scale: it shows which families are seasonal (SCHOOL AND OFFICE SUPPLIES peaks in the school-start months, LIQUOR in December) and which grow over time.",
-                 "add or remove families above; double-click a legend entry to isolate it.")
+                 "'Index' puts small and large products on one scale, so you can see which ones change with the seasons (School supplies peak when school starts, Liquor in December) and which grow over time.",
+                 "add or remove products above; double-click a name in the legend to show only that one.")
 
-    theme.chapter("5.9", "Seasonal fingerprint of every family",
-                  "Each row is a family, each column a month. 100 means an average month for that family.")
+    theme.chapter("5.9", "When in the year each product sells",
+                  "Each row is a product and each column a month. 100 means a normal month for that product.")
     fm = family_day.copy()
     fm["month"] = fm["date"].dt.month
     fm = fm[fm["date"].dt.year.between(2014, 2016)]
@@ -269,10 +269,10 @@ def ch_families():
     fig.update_traces(hovertemplate="%{y}, %{x}: index %{z:.0f}<extra></extra>")
     fig.update_layout(xaxis_title="", yaxis_title="", coloraxis_colorbar_title="index")
     theme.chart(fig, height=780)
-    theme.figcap("5.9", "Seasonal index heatmap", "Average daily sales per month (2014 – 2016) divided by the family's own average.",
-                 "Most families are flat with a red December. SCHOOL AND OFFICE SUPPLIES spikes in August – September (school start in the Sierra region), BOOKS and FROZEN FOODS have the strongest single peaks, and LIQUOR doubles in December. "
-                 "Families at the bottom of the chart have the strongest seasonality.",
-                 "red is above the family's normal level, teal below.")
+    theme.figcap("5.9", "Seasonal index heatmap", "Each product's sales per month compared with its own normal level (2014 to 2016).",
+                 "Most products stay level, with a jump in December. School supplies jump in August and September, when school starts in the highlands. Books and Frozen foods have the biggest single peaks, and Liquor doubles in December. "
+                 "Products at the bottom of the chart change the most through the year.",
+                 "orange is above the product's normal level and blue is below.")
 
 # =================================================================== stores
 @st.fragment
@@ -294,23 +294,23 @@ def ch_stores_():
                       marker=dict(line=dict(width=1, color=theme.PAPER)))
     fig.update_layout(xaxis_title="Average transactions per selling day", yaxis_title="Average sales per selling day", legend_title_text="")
     theme.chart(fig, height=520)
-    theme.figcap("5.10", "Bubble scatter", "Every store: average customers (x) against average units sold (y) per selling day; bubble size is the number of selling days.",
-                 "Stores line up along a rising diagonal: more customers, more sales. Stores above the line sell more per customer (bigger baskets), stores below it serve many small baskets. "
+    theme.figcap("5.10", "Bubble scatter", "One bubble per store: customers per day going right, units sold per day going up. Bigger bubbles have more days of data.",
+                 "The more customers a store has, the more it sells. Stores above the general line sell more per customer (bigger baskets), and stores below it serve many small baskets. "
                  "Type A stores occupy the top right.",
-                 "hover a bubble for the store's city, type and units per transaction; change the colour to compare clusters or cities.")
+                 "point at a bubble for the store's details; change the colour to compare clusters or cities.")
     rank = st_.sort_values("sales")
     fig = px.bar(rank, x="sales", y=rank["store_nbr"].astype(str), color=color_by, orientation="h", color_discrete_sequence=theme.COLORWAY,
                  hover_data={"city": True})
     fig.update_layout(yaxis_title="Store", xaxis_title="Average sales per selling day", legend_title_text="", yaxis=dict(type="category"))
     theme.chart(fig, height=900)
     theme.figcap("5.11", "Ranked bars", "All stores ranked by average daily sales in the selected years.",
-                 "The best store sells more than ten times as much per day as the weakest one. Store format and city explain most of that gap.", "")
+                 "The best store sells more than ten times as much per day as the weakest.", "")
 
 # =================================================================== promotions
 @st.fragment
 def ch_promotions():
     theme.chapter("5.12", "Do promotions lift sales?",
-                  "Promotions were not recorded before 2014. Within each family, rows with at least one promoted item are compared with rows without any.")
+                  "No promotions were recorded before 2014. For each product, days with a promotion are compared with days without one.")
     smp = data.load("clean_sample")
     smp = smp[smp["date"] >= "2014-04-01"]
     smp["promo"] = np.where(smp["onpromotion"] > 0, "with promotion", "no promotion")
@@ -329,10 +329,9 @@ def ch_promotions():
                              hovertemplate="%{y}<br>with promotion: %{x:,.1f}<br>%{customdata:.1f}× the no-promotion value<extra></extra>"))
     fig.update_layout(xaxis_type="log", xaxis_title=f"{stat.capitalize()} units per row (log scale)", yaxis_title="")
     theme.chart(fig, height=820)
-    theme.figcap("5.12", "Dumbbell chart", f"{stat.capitalize()} sales per row with and without promotion, per family (150,000-row sample, from April 2014).",
-                 "For almost every family the promoted rows sell far more. Part of this is causal (the promotion), part is selection: stores promote what already sells well. "
-                 "That is why a model needs both promotions and sales history.",
-                 "the distance between the two dots is the promotion gap; hover the orange dot for the multiple.")
+    theme.figcap("5.12", "Two dots per product", f"{stat.capitalize()} sales per row with and without promotion, per family (150,000-row sample, from April 2014).",
+                 "Almost every product sells far more when on promotion. Part of that is the promotion itself, and part is that stores tend to promote what already sells well.",
+                 "the further apart the two dots, the bigger the difference; point at the orange dot for how many times more.")
     d = daily.set_index("date")[["sales", "promotions"]].resample("MS").sum().iloc[:-1]
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(go.Scatter(x=d.index, y=d["sales"], name="sales", line=dict(color=theme.TEAL, width=2)), secondary_y=False)
@@ -340,14 +339,14 @@ def ch_promotions():
     fig.update_yaxes(title_text="Monthly sales", secondary_y=False)
     fig.update_yaxes(title_text="Monthly promoted items", secondary_y=True, showgrid=False)
     theme.chart(fig, height=360)
-    theme.figcap("5.13", "Dual-axis chart", "Monthly total sales (line) and monthly promoted items (bars).",
-                 "Promotions start in 2014 and grow fast until 2016, while sales also rise. Both trend upward together, so a simple correlation over time exaggerates the promotion effect.", "")
+    theme.figcap("5.13", "Line and bars together", "Monthly total sales (line) and monthly promoted items (bars).",
+                 "Promotions start in 2014 and grow quickly until 2016, while sales also grow. Because both rise together over time, this chart alone can make promotions look more powerful than they are.", "")
 
 # =================================================================== oil
 @st.fragment
 def ch_oil():
     theme.chapter("5.14", "Does the oil price move grocery sales?",
-                  "Ecuador exports oil, so a price collapse can squeeze incomes. The question is whether we can see it in daily groceries.")
+                  "Ecuador exports oil, so a price crash can squeeze incomes. Can we see that in grocery sales?")
     win = st.slider("Rolling window (days)", 30, 365, 90, 15)
     d = daily.set_index("date")[["sales", "oil_price"]].copy()
     d = d[d["sales"] > 1000]
@@ -364,11 +363,11 @@ def ch_oil():
     fig.update_yaxes(title_text="corr.", range=[-1, 1], row=2, col=1)
     fig.update_layout(hovermode="x unified")
     theme.chart(fig, height=560)
-    theme.figcap("5.14", "Dual axis with rolling correlation",
-                 f"Top: 30-day average of daily sales and the oil price. Bottom: their correlation over a rolling {win}-day window.",
-                 "Over the whole period oil falls while sales rise, giving a negative overall correlation (about −0.24 at store-day level). "
-                 "The rolling correlation swings between strongly negative and positive: there is no stable day-to-day link. Oil is a slow background factor, mostly through the 2014 – 2015 collapse.",
-                 "change the window to see short-term and long-term relationships.")
+    theme.figcap("5.14", "Lines, with their link below",
+                 f"Top: sales (smoothed over 30 days) and the oil price. Bottom: how closely the two moved together over each {win}-day stretch.",
+                 "Over the five years oil fell while sales rose, so overall they move in opposite directions (about −0.24). "
+                 "But the link keeps swinging from negative to positive, so there is no steady day-to-day connection. Oil is at most a slow background factor.",
+                 "change the number of days to compare short and long periods.")
     m = daily.set_index("date")[["sales", "oil_price"]].resample("MS").mean().reset_index()
     m["year"] = m["date"].dt.year.astype(str)
     fig = px.scatter(m, x="oil_price", y="sales", color="year", color_discrete_sequence=theme.COLORWAY,
@@ -377,13 +376,13 @@ def ch_oil():
     fig.update_layout(xaxis_title="Average oil price in the month (USD)", yaxis_title="Average daily sales in the month", legend_title_text="")
     theme.chart(fig, height=400)
     theme.figcap("5.15", "Scatter, one point per month", "Monthly average oil price against monthly average daily sales, coloured by year.",
-                 "The points form colour bands by year rather than one line: time (business growth) explains sales much better than the oil price does.", "")
+                 "The dots group by year instead of forming one line, so the growth of the business explains sales much better than the oil price does.", "")
 
 # =================================================================== earthquake
 @st.fragment
 def ch_earthquake():
     theme.chapter("5.16", "16 April 2016: the earthquake",
-                  "A magnitude 7.8 earthquake hit the Ecuadorian coast. The holiday file marks the following month as 'Terremoto Manabi' events.")
+                  "A magnitude 7.8 earthquake hit the coast of Ecuador. The holiday file marks the month after it as special events.")
     ds = daily.set_index("date")["sales"]
     w = ds["2016-03-01":"2016-06-30"]
     prev = ds.shift(364)["2016-03-01":"2016-06-30"]
@@ -400,8 +399,8 @@ def ch_earthquake():
     theme.figcap("5.16", "Line chart with comparison year",
                  "Daily sales from March to June 2016 against the same weekdays one year earlier (shifted by 364 days).",
                  f"Right after the earthquake daily sales jumped far above the weekday pattern; the month averaged {during / before - 1:+.0%} against the 30 days before. "
-                 "The gap to 2015 widens during the period and then closes again.",
-                 "hover to read both years for the same day.")
+                 "The gap to the year before widens during that month and then closes again.",
+                 "point at the chart to read both years for the same day.")
     fdd = family_day.set_index("date")
     b = fdd.loc["2016-03-16":"2016-04-15"].groupby("family")["sales"].mean()
     a = fdd.loc["2016-04-16":"2016-05-16"].groupby("family")["sales"].mean()
@@ -411,13 +410,13 @@ def ch_earthquake():
     fig.update_traces(hovertemplate="%{y}: %{x:+.1%}<extra></extra>")
     fig.update_layout(xaxis_tickformat="+.0%", coloraxis_showscale=False, yaxis_title="", xaxis_title="Change in average daily sales vs the 30 days before")
     theme.chart(fig, height=760)
-    theme.figcap("5.17", "Diverging bars by family", "How each family's average daily sales changed during the earthquake month (families with at least 50 units a day).",
-                 "Almost every family rose; GROCERY I, the largest, grew about 31%. The extreme jump of SCHOOL AND OFFICE SUPPLIES (about +270%) overlaps with the school start in the coastal region in April – May, so not all of it is the earthquake.", "")
+    theme.figcap("5.17", "Bars by product", "How each product's daily sales changed during the earthquake month (products selling at least 50 units a day).",
+                 "Almost every product rose; Grocery I, the largest, grew about 31%. School supplies jumped about 270%, but that overlaps with school starting on the coast in April and May, so not all of it is the earthquake.", "")
 
 # =================================================================== distribution
 @st.fragment
 def ch_distribution():
-    theme.chapter("5.18", "Shape of sales after cleaning, and the flagged extremes")
+    theme.chapter("5.18", "How sales are spread, and the unusually high days")
     smp = data.load("clean_sample")
     c1, c2, c3 = st.columns(3)
     by = c1.selectbox("Split by", ["type", "family", "cluster", "is_holiday", "is_weekend"], format_func=lambda c: data.label({"type": "store_type"}.get(c, c)))
@@ -431,28 +430,28 @@ def ch_distribution():
     fig.update_layout(xaxis_title="log(1 + sales)" if col == "sales_log1p" else "sales", yaxis_title="")
     theme.chart(fig, height=max(360, 24 * len(order)))
     theme.figcap("5.18", "Box plots", f"Distribution of {('log ' if col == 'sales_log1p' else '')}sales per row, split by {data.label(by).lower()} (20,000 sampled rows{', zeros included' if zeros else ', selling rows only'}).",
-                 "On the log scale every group is roughly symmetric, which is why the log column is used for modelling. Families differ by orders of magnitude, so a single global outlier rule would flag all of GROCERY I and none of BOOKS.",
-                 "switch to 'sales' to see how skewed the raw values are.")
+                 "Products differ hugely in size, so one limit for everything would mark all of Grocery I as extreme and none of Books. That is why each product is judged on its own.",
+                 "switch to 'sales' to see how uneven the original values are.")
     sf = data.load("store_family")
     ex = sf.groupby("family")["extreme_rows"].sum().sort_values(ascending=False).head(15).reset_index()
     fig = px.bar(ex, x="family", y="extreme_rows", color_discrete_sequence=[theme.PERSIMMON])
     fig.update_layout(xaxis_title="", yaxis_title="Flagged rows", xaxis_tickangle=-35)
     theme.chart(fig, height=380)
-    theme.figcap("5.19", "Bar chart", "Rows above Q3 + 3 × IQR inside their own store and family (top 15 families). 3,373 rows in total, 0.11%.",
-                 "FROZEN FOODS flags are almost all in the week before Christmas; HOME APPLIANCES flags appear when a store that usually sells 0 – 2 items sells a few more. They are real and kept, only flagged.", "")
+    theme.figcap("5.19", "Bar chart", "Rows unusually high for their own store and product, using the IQR rule (top 15 products). 3,373 rows in total, or 0.11%.",
+                 "Frozen foods are mostly in the week before Christmas. Home appliances appear when a store that usually sells 0 to 2 items sells a few more. These are real sales, so they are kept and only marked.", "")
     zz = daily.copy()
     zz["share"] = zz["zero_families"] / 1782
     fig = px.area(zz, x="date", y="share", color_discrete_sequence=[theme.SAND])
     fig.update_layout(yaxis_tickformat=".0%", yaxis_title="Rows with zero sales", xaxis_title="")
     theme.chart(fig, height=300)
-    theme.figcap("5.20", "Area chart", "Share of the 1,782 store-family rows with zero sales, per day.",
-                 "Zero rows fall from about 50% in 2013 to about 15% in 2017 as new stores open and assortments widen. Spikes to 100% are 1 January.", "")
+    theme.figcap("5.20", "Area chart", "Each day, the share of the 1,782 store and product combinations with no sales.",
+                 "Rows with no sales fall from about 50% in 2013 to about 15% in 2017, as stores open and stock more products. The spikes to 100% are 1 January.", "")
 
 # =================================================================== correlations
 @st.fragment
 def ch_corr():
     theme.chapter("5.21", "Which measures move together?",
-                  "Store-day level. Only store-days with observed transactions are used: estimated values come from sales and would inflate that link.")
+                  "Only days with a real customer count are used. The estimated counts were worked out from sales, so including them would make the link look stronger than it is.")
     sd = store_day[store_day["fill_method"] == "observed"].copy()
     sd["sales_log"] = np.log1p(sd["sales"])
     sd["transactions_log"] = np.log1p(sd["transactions_original"])
@@ -470,9 +469,8 @@ def ch_corr():
         fig.update_layout(coloraxis_colorbar_title="")
         theme.chart(fig, height=560)
         theme.figcap("5.21", "Correlation matrix", f"{method.capitalize()} correlation between the chosen store-day measures (83,488 observed store-days).",
-                     "Sales and transactions are strongly linked (0.84). Promotions and year are linked because promotions only grew over time; oil is negative because it fell while sales grew. "
-                     "Spearman uses ranks and is less sensitive to the skewed sales values.",
-                     "+1 means the two always rise together, −1 that one falls when the other rises, 0 no straight-line link.")
+                     "Sales and customers are strongly linked (0.84). Promotions and year are linked because promotions grew over time. Oil is negative because it fell while sales grew.",
+                     "+1 means they rise together, −1 means one falls when the other rises, and 0 means no steady link.")
 
 
 for chapter_view in [ch_time, ch_rhythm, ch_holidays, ch_families, ch_stores_, ch_promotions,
