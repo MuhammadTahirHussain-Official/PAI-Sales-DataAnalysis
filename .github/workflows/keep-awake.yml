@@ -1,7 +1,7 @@
 name: Keep the Streamlit app awake
 
 # Streamlit Community Cloud puts an app to sleep after hours without visitors.
-# This job visits the site in a real browser every 3 hours (and wakes it if needed),
+# This job visits the site in a real browser every hour (and wakes it if needed),
 # so it is always ready when someone opens it.
 #
 # Setup: repository Settings -> Secrets and variables -> Actions -> Variables
@@ -9,7 +9,7 @@ name: Keep the Streamlit app awake
 
 on:
   schedule:
-    - cron: "23 */3 * * *"   # every 3 hours, at minute 23 (UTC)
+    - cron: "23 * * * *"     # every hour, at minute 23 (UTC); GitHub sometimes skips scheduled runs
   workflow_dispatch:          # "Run workflow" button for a manual check
 
 permissions:
