@@ -11,7 +11,7 @@ from lib.data import WEEKDAYS
 # Full-screen on this page only: no menu bar, no margins. The two hidden links let the
 # animated page move to the next page without reloading the app.
 theme.html("""<style>
-[data-testid="stHeader"] { display:none; }
+.st-key-topnav { display:none !important; }
 [data-testid="stMainBlockContainer"] { padding:0 !important; max-width:none !important; }
 [data-testid="stMain"] { overflow:hidden; }
 [data-testid="stVerticalBlock"] { gap:0 !important; }

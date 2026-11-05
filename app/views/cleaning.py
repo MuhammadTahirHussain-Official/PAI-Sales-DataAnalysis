@@ -1,7 +1,11 @@
+import time
+from datetime import date as date_type
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from pydantic import BaseModel, Field, ValidationError
 
 from lib import data, theme
 
@@ -10,58 +14,11 @@ S = data.summary()
 M = S["merged"]["missing"]
 C = S["clean"]
 
-theme.flow_top("views/pipeline.py")
-theme.page_title(
-    "Technical overview",
-    "Merging and <em>cleaning</em>",
-    "How the files were joined without losing or duplicating a single sales row, which values were missing after the join, "
-    "and exactly which rule filled each of them.")
+theme.flow_top("views/cleaning.py")
+theme.page_title("Technical overview", "<em>Cleaning</em> and validation",
+                 "Which rule filled each gap, how many rows it touched, and how every rule was then checked with pandas and Pydantic.")
 
-# ------------------------------------------------------------------ animated pipeline
-steps = S["etl_steps"]
-nodes = "".join(
-    f'<div class="node"><div class="k">{"Extract" if i == 0 else "Join " + str(i)}</div>'
-    f'<div class="t">{s["step"]}</div><div class="m">{s["rows"]:,} rows · {s["columns"]} cols</div>'
-    f'<div class="j">{s["join"]}<br>key: {s["key"]}</div></div>'
-    + ('<div class="link"><span></span></div>' if i < len(steps) - 1 else "")
-    for i, s in enumerate(steps))
-flow = f"""<!doctype html><html><head><link rel="stylesheet" href="{theme.FONT_LINK}"><style>
-* {{ box-sizing: border-box; margin: 0; }}
-html, body {{ background: transparent; font-family: {theme.FONT_BODY}; color: {theme.INK}; overflow: hidden; }}
-.flow {{ display: flex; align-items: stretch; padding: 4px; }}
-.node {{ flex: 1 1 0; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 14px; }}
-.node:last-child {{ background: {theme.PERSIMMON}; color: #14110E; border-color: {theme.PERSIMMON}; }}
-.node:last-child .k, .node:last-child .m, .node:last-child .j {{ color: #14110E; }}
-.k {{ font-family: {theme.FONT_MONO}; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: {theme.PERSIMMON}; }}
-.t {{ font-family: {theme.FONT_DISPLAY}; font-size: 22px; line-height: 1.1; margin: 6px 0 8px; }}
-.m {{ font-family: {theme.FONT_MONO}; font-size: 12px; color: {theme.INK_2}; }}
-.j {{ font-size: 12px; color: {theme.MUTED}; margin-top: 8px; line-height: 1.45; }}
-.link {{ flex: 0 0 28px; position: relative; }}
-.link span {{ position: absolute; top: 50%; left: 4px; right: 4px; height: 2px; background: {theme.PERSIMMON}; transform-origin: left; }}
-@media (max-width: 760px) {{ .flow {{ flex-direction: column; }} .link {{ flex-basis: 16px; }} }}
-</style></head><body><div class="flow">{nodes}</div>{theme.gsap_scripts()}<script>
-gsap.timeline()
-  .from('.node', {{autoAlpha: 0, y: 18, stagger: .22, duration: .6, ease: 'power3.out'}})
-  .from('.link span', {{scaleX: 0, stagger: .22, duration: .4, ease: 'power2.inOut'}}, .3);
-</script></body></html>"""
-st.iframe(flow, height=230)
-theme.figcap("3.0", "Pipeline diagram",
-             "The four left joins of Part 1. The sales table stays the left side of every join.",
-             "The row count stays 3,000,888 after every join: no sales row was lost and none was duplicated. Joins with many_to_one validation would fail if a store, a store-day or a holiday store-day appeared twice on the right side.",
-             "read left to right; the dark box is the final merged table.")
-
-theme.chapter("3.1", "Checks made at every join")
-theme.ledger(
-    ["Join", "Rule", "Why it matters", "Result"],
-    [["stores", "validate='many_to_one', indicator=True", "every store must exist exactly once in stores.csv", '<span class="ok">54 / 54 matched</span>'],
-     ["transactions", "validate='many_to_one'", "one record per store-day at most", '<span class="ok">0 duplicate keys</span>'],
-     ["oil", "duplicate-date check", "one price per date", '<span class="ok">0 duplicate dates</span>'],
-     ["holidays", "aggregate to one row per store-day, then many_to_one", "two events on one day must not double the sales rows", '<span class="ok">9,601 unique store-days</span>'],
-     ["every join", "assert rows before == rows after", "nothing lost, nothing multiplied", '<span class="ok">3,000,888 rows</span>']])
-
-# ------------------------------------------------------------------ missing after merge
-theme.chapter("3.2", "What was missing after the join",
-              "Joining never invents values: where the right-hand file had no match, the new columns are empty. These gaps are what Part 3 cleans.")
+theme.chapter("4.0", "Before and after", "Every column that had empty values, and what cleaning did to it.")
 miss = pd.DataFrame([
     {"column": k, "before": v, "after": C["missing"].get(k, 0)} for k, v in M.items() if v > 0
 ]).sort_values("before")
@@ -156,6 +113,112 @@ theme.chart(fig, height=380)
 theme.figcap("3.6", "Bar chart", "How many of the 3,000,888 rows carry each new 0/1 flag.",
              "Only 5% of rows are on an active holiday for their store. 12,837 rows whose only record was transferred away now correctly count as normal days, and Work Days are kept apart from holidays.", "")
 
+# ------------------------------------------------------------------ validation
+theme.chapter("Validation", "Every rule, checked",
+              "Cleaning is only trustworthy if it is tested. Pandas assertions cover all three million rows, and Pydantic models describe what a valid row looks like and reject anything else.")
+checked = sum(p["checked"] for p in S["pydantic"])
+errors = sum(p["errors"] for p in S["pydantic"])
+theme.stats([
+    (f"{sum(ok for _, ok in S['integrity'])}/{len(S['integrity'])}", "integrity checks pass", "cleaned vs original data"),
+    (str(len(S["pydantic"])), "Pydantic models", "store-day, date, row, model row"),
+    (f"{checked:,}", "records validated", "in the last recorded run"),
+    (str(errors), "validation errors", "", errors == 0),
+])
+
+# ------------------------------------------------------------------ integrity
+theme.chapter("4.1", "Did cleaning keep the original data intact?",
+              "Each line compares the cleaned table with the merged table it came from. Cleaning may add information; it must never change an observation.")
+theme.ledger(["Check", "Result"],
+             [[name, '<span class="ok">PASS</span>' if ok else '<span class="fail">FAIL</span>'] for name, ok in S["integrity"]])
+
+# ------------------------------------------------------------------ models
+theme.chapter("4.2", "The Pydantic models",
+              "A Pydantic model is a small class: one line per column, with its type and allowed range. "
+              "<code>ge</code> means greater or equal, <code>gt</code> greater than, <code>le</code> less or equal. "
+              "A value such as 12.5 transactions, −3 sales or an empty oil price is rejected.")
+for p in S["pydantic"]:
+    with st.expander(f"{p['model']}  ·  {p['level']}  ·  {p['checked']:,} checked  ·  {p['errors']} errors", expanded=p["model"] == "StoreDayTransactions"):
+        a, b, c, d = st.columns(4)
+        a.markdown(theme.card("Records checked", f"{p['checked']:,}", f"of {p['population']:,} in the table"), unsafe_allow_html=True)
+        b.markdown(theme.card("Errors", str(p["errors"]), "rows that broke a rule"), unsafe_allow_html=True)
+        c.markdown(theme.card("Time", f"{p['seconds']} s", "for the whole loop"), unsafe_allow_html=True)
+        d.markdown(theme.card("Notebook", p["notebook"], "where it runs"), unsafe_allow_html=True)
+        theme.ledger(["Field", "Type", "Rules"], [[f"<code>{f['field']}</code>", f["type"], f["rules"]] for f in p["fields"]])
+
+# ------------------------------------------------------------------ coverage matrix
+theme.chapter("4.3", "Coverage: which column is protected by what",
+              "Every column of the cleaned table is covered by the pandas checks. The heat map shows which ones are also validated field by field by a Pydantic model.")
+cov = pd.DataFrame(S["coverage"])
+models = ["StoreDayTransactions", "OilDay", "CleanSalesRow"]
+z = [[1 if m in r["pydantic"] else 0 for m in models] + [1] for _, r in cov.iterrows()]
+fig = go.Figure(go.Heatmap(z=z, x=models + ["pandas checks"], y=cov["column"], colorscale=[[0, theme.PAPER_2], [1, theme.MOSS]],
+                           showscale=False, xgap=3, ygap=2,
+                           hovertemplate="%{y} · %{x}: %{z}<extra></extra>"))
+fig.update_layout(yaxis=dict(autorange="reversed", tickfont=dict(family=theme.FONT_MONO, size=11)), xaxis=dict(side="top"))
+theme.chart(fig, height=820)
+covered = int((cov["pydantic"].str.len() > 0).sum())
+theme.figcap("4.3", "Coverage matrix",
+             f"{covered} of {len(cov)} cleaned columns are validated by at least one Pydantic model; all {len(cov)} are covered by pandas assertions.",
+             "The 14 columns without a Pydantic rule are the five holiday text columns, the national / regional / local holiday flags, "
+             "transactions_fill_method and the calendar parts recalculated from the date (year, day, day_name, week_of_year, quarter). "
+             "They are checked by pandas assertions instead (flags only 0/1, months 1 – 12, weekdays 0 – 6, text never empty). "
+             "Adding them to CleanSalesRow is an easy next step.",
+             "green means the column is validated by that check; hover for details.")
+
+# ------------------------------------------------------------------ live run
+theme.chapter("4.4", "Run the validation yourself",
+              "This re-runs the store-day and oil models on the data bundled with this site, right now, in your browser session.")
+
+
+class StoreDayTransactions(BaseModel):
+    store_nbr: int = Field(ge=1, le=54)
+    transactions: int = Field(ge=0)
+
+
+class OilDay(BaseModel):
+    date: date_type
+    oil_price: float = Field(gt=0, allow_inf_nan=False)
+
+
+if st.button("Run Pydantic validation now", type="primary"):
+    sd = data.load("store_day")[["store_nbr", "transactions"]]
+    od = data.load("daily")[["date", "oil_price"]].copy()
+    od["date"] = od["date"].dt.date
+    bar = st.progress(0.0, text="Validating store-days")
+    errs, rows = 0, sd.to_dict("records")
+    start = time.perf_counter()
+    for i, row in enumerate(rows):
+        try:
+            StoreDayTransactions(**row)
+        except ValidationError:
+            errs += 1
+        if i % 9000 == 0:
+            bar.progress(i / (len(rows) + len(od)), text=f"Validating store-days · {i:,} / {len(rows):,}")
+    oerrs = 0
+    for row in od.to_dict("records"):
+        try:
+            OilDay(**row)
+        except ValidationError:
+            oerrs += 1
+    bar.progress(1.0, text="Done")
+    theme.stats([(f"{len(rows):,}", "store-days validated", f"{errs} errors", errs == 0),
+                 (f"{len(od):,}", "dates validated", f"{oerrs} errors", oerrs == 0),
+                 (f"{time.perf_counter() - start:.2f} s", "elapsed", "")])
+
+theme.chapter("4.5", "Try to break it",
+              "Type values for one store-day and see how Pydantic answers. This is exactly the rule used in notebook 03, section 15.8.")
+c1, c2, c3 = st.columns([1, 1, 2])
+store = c1.text_input("store_nbr", "12")
+tx = c2.text_input("transactions", "1530")
+with c3:
+    try:
+        obj = StoreDayTransactions(store_nbr=store, transactions=tx)
+        st.markdown(f'<div class="insight"><div class="t">Accepted</div><p>store_nbr = {obj.store_nbr}, transactions = {obj.transactions}. '
+                    f'Try 0 or 55 for the store, or -4, 12.5 or "abc" for transactions.</p></div>', unsafe_allow_html=True)
+    except ValidationError as e:
+        msgs = "<br>".join(f"<code>{'.'.join(map(str, err['loc']))}</code>: {theme.esc(err['msg'])} (input: {theme.esc(err['input'])})" for err in e.errors())
+        st.markdown(f'<div class="insight" style="border-color:{theme.PERSIMMON}"><div class="t">Rejected</div><p>{msgs}</p></div>', unsafe_allow_html=True)
+
 # ------------------------------------------------------------------ download
 theme.chapter("3.7", "Download the final clean data",
               "The complete cleaned table as a CSV inside a zip file: 3,000,888 rows, 38 columns, no missing values.")
@@ -179,4 +242,4 @@ theme.ledger(["Columns", "Meaning"], [
     ["year, month, day, day_of_week, day_name, week_of_year, quarter, is_weekend, is_payday", "Date features"],
 ])
 
-theme.flow_next("views/pipeline.py")
+theme.flow_next("views/cleaning.py")

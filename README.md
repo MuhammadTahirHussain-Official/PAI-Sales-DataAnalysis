@@ -8,16 +8,18 @@ An interactive Streamlit report on the Kaggle **Store Sales – Time Series Fore
 
 **Project summary (first step for technical users).** The whole project in one view: a GSAP animation of the six steps (raw data, merging, EDA before cleaning, cleaning, EDA after cleaning, conclusion) drawn from real numbers, plus the conclusions and links to both dashboards.
 
-**Technical overview**, for analysts. It runs in order from the summary, with a step rail at the top and a link to the next step at the bottom of each page:
+**Technical overview**, for analysts. It opens with the project summary, then runs in order, with a step rail at the top and a link to the next step at the bottom of each page:
 
-| Page | What it shows |
-| --- | --- |
-| 1. Raw data and EDA before cleaning | Every CSV: column dictionary, facts and charts |
-| 2. Merging and cleaning | Animated joins, checks at every join, missing values before and after, the cleaning ledger |
-| 3. Validation | 11 integrity checks, four Pydantic models, coverage matrix, live re-run, "try to break it" |
-| 4. EDA after cleaning | 20 charts on one page; click a point on the time series for a summary of that day and likely reasons |
-| 5. Chart studio | Any table, any x, y and colour, chart type, aggregation, log axes, trend line, filters |
-| 6. Features | The no-leakage rule, feature groups, correlation with the target, encoding |
+| Step | Page | What it shows |
+| --- | --- | --- |
+| 1 | Raw data | The five files: facts, and what every column means |
+| 2 | Merging | Animated joins, which file is merged on which column and why, checks, what was empty afterwards |
+| 3 | EDA before cleaning | Sales distribution, products, stores, gaps in transactions, oil and holidays |
+| 4 | Cleaning | Every rule and the rows it touched, then 11 integrity checks, four Pydantic models, coverage matrix, live re-run and "try to break it" |
+| 5 | EDA after cleaning | 20 charts on one page; click a point on the time series for a summary of that day and likely reasons |
+| 6 | Chart studio | Any table, any x, y and colour, chart type, aggregation, log axes, trend line, filters |
+| 7 | Features | The no-leakage rule, feature groups, correlation with the target, encoding |
+| 8 | Conclusion | Findings, what was done, limits, next step, download of the clean data |
 
 **Business overview**, for store managers and other non-technical users. It uses the structure of the team's manager prototype with real data for any of the 54 stores:
 

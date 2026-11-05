@@ -36,7 +36,7 @@ FONT_LINK = ("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,
              "&family=Hanken+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap")
 
 GLASS = "background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.11);border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07);"
-BLUR = "backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);"
+BLUR = ""  # live blur over the moving glow made every frame slow
 
 CSS = f"""
 <style>
@@ -52,7 +52,7 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {{ background: {PAPER}; }
 .stApp code {{ font-family:{FONT_MONO}; background:rgba(255,255,255,.08); color:{OCHRE}; border-radius:5px; }}
 [data-testid="stIconMaterial"], .material-symbols-rounded {{ font-family:'Material Symbols Rounded' !important; }}
 [data-testid="stMainBlockContainer"] {{ max-width:1260px; padding:5rem 2rem 6rem; position:relative; z-index:1; }}
-[data-testid="stHeader"] {{ background:rgba(14,15,17,.72); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-bottom:1px solid rgba(255,255,255,.08); }}
+[data-testid="stHeader"] {{ display:none; }}
 [data-testid="stVerticalBlock"] {{ gap:1.5rem; }}
 [data-testid="stHorizontalBlock"] {{ gap:1.5rem !important; }}
 .st-key-fx {{ position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; pointer-events:none; }}
@@ -104,6 +104,15 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {{ background: {PAPER}; }
 .ledger tr:last-child td {{ border-bottom:none; }}
 .ledger td:first-child {{ color:{INK}; font-weight:500; }}
 .ledger td.n {{ font-family:{FONT_MONO}; color:{INK}; white-space:nowrap; }}
+@media (max-width:700px) {{
+  .ledger thead {{ display:none; }}
+  .ledger, .ledger tbody, .ledger tr, .ledger td {{ display:block; width:100%; }}
+  .ledger tr {{ padding:.75rem 0; border-bottom:1px solid rgba(255,255,255,.12); }}
+  .ledger tr:last-child {{ border-bottom:none; }}
+  .ledger td, .ledger td.n {{ border:0; padding:.22rem 0; white-space:normal; }}
+  .ledger td:first-child {{ font-size:1.05rem; }}
+  .ledger td:not(:first-child)::before {{ content:attr(data-label); display:block; font-family:{FONT_MONO}; font-size:.64rem; letter-spacing:.1em; text-transform:uppercase; color:{MUTED}; }}
+}}
 .ok, .fail {{ display:inline-block; font-family:{FONT_MONO}; font-size:.7rem; letter-spacing:.08em; padding:.15rem .55rem; border-radius:99px; white-space:nowrap; }}
 .ok {{ background:rgba(169,209,142,.16); color:{MOSS}; }} .fail {{ background:rgba(240,118,106,.16); color:{CORAL}; }}
 
@@ -152,7 +161,17 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {{ background: {PAPER}; }
 .st-key-calgrid [class*="cal_lo_"] button {{ background:#5A2A26 !important; }} .st-key-calgrid [class*="cal_vl_"] button {{ background:#9A3B32 !important; }}
 .st-key-calgrid [class*="st-key-calsel"] button {{ outline:2px solid {PERSIMMON}; outline-offset:2px; }}
 .calhead {{ text-align:center; font-family:{FONT_MONO}; font-size:.72rem; color:{MUTED}; }}
-@media (max-width:640px) {{ .st-key-calgrid button {{ min-height:58px; }} .st-key-calgrid button p {{ font-size:.66rem; }} }}
+@media (max-width:640px) {{
+  [data-testid="stMainBlockContainer"] {{ padding-left:1rem; padding-right:1rem; }}
+  .st-key-mgrbar [data-testid="stHorizontalBlock"] {{ flex-wrap:wrap; }}
+  .st-key-mgrbar [data-testid="stColumn"]:first-child {{ flex:1 1 100% !important; width:100% !important; }}
+  .st-key-mgrbar [data-testid="stColumn"]:not(:first-child) {{ flex:1 1 0 !important; }}
+  .st-key-calgrid [data-testid="stHorizontalBlock"] {{ gap:4px !important; }}
+  .st-key-calgrid [data-testid="stVerticalBlock"] {{ gap:4px; }}
+  .st-key-calgrid button {{ min-height:58px; padding:4px 0; border-radius:10px !important; min-width:0; }}
+  .st-key-calgrid button * {{ overflow:visible !important; text-overflow:clip !important; }}
+  .st-key-calgrid button p {{ font-size:.62rem; letter-spacing:-.03em; }}
+}}
 
 .stButton > button, .stDownloadButton > button {{ border-radius:99px; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.04); transition:all .25s; }}
 .stButton > button:hover, .stDownloadButton > button:hover {{ border-color:{PERSIMMON}; color:{PERSIMMON}; }}
@@ -176,6 +195,46 @@ footer {{ visibility:hidden; }}
 .flow-b {{ display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:6px; }}
 .flow-b i {{ display:block; height:4px; border-radius:4px; background:rgba(255,255,255,.12); }}
 .flow-b i.on {{ background:{PERSIMMON}; }}
+
+/* our own menu: a bar with two panels that open as a curtain, links rising one after another */
+.st-key-topnav {{ position:fixed; top:0; left:0; right:0; height:58px; z-index:999999; display:flex; flex-direction:row; align-items:center; gap:clamp(14px,3vw,40px); padding:0 clamp(14px,3vw,40px); background:rgba(14,15,17,.94); border-bottom:1px solid rgba(255,255,255,.1); }}
+.st-key-topnav > div, .st-key-topnav [data-testid="stElementContainer"] {{ width:auto !important; }}
+.st-key-topnav [data-testid="stPageLink"] a {{ background:none; border:0; box-shadow:none; padding:0; border-radius:0; }}
+.st-key-topnav [data-testid="stPageLink"] p, .navlabel {{ font-family:{FONT_BODY}; font-size:clamp(.82rem,1.6vw,.95rem); font-weight:500; color:{INK}; white-space:nowrap; }}
+.st-key-navstart [data-testid="stPageLink"] a {{ position:relative; }}
+.navlabel {{ display:flex; align-items:center; gap:.55rem; height:58px; cursor:pointer; user-select:none; }}
+.navlabel i {{ position:relative; display:block; width:10px; height:10px; transition:transform .45s cubic-bezier(.2,.7,.1,1); }}
+.navlabel i::before, .navlabel i::after {{ content:""; position:absolute; background:{PERSIMMON}; }}
+.navlabel i::before {{ left:0; right:0; top:4px; height:2px; }}
+.navlabel i::after {{ top:0; bottom:0; left:4px; width:2px; }}
+.navpanel {{ }}
+.st-key-navp_tech, .st-key-navp_biz {{ position:fixed; top:58px; left:0; right:0; max-height:calc(100vh - 58px); overflow-y:auto; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0 clamp(16px,3vw,48px); padding:clamp(20px,3vw,44px) clamp(14px,3vw,40px) clamp(24px,3vw,48px); background:#14151A; border-bottom:1px solid {PERSIMMON}; box-shadow:0 40px 80px rgba(0,0,0,.6); clip-path:inset(0 0 100% 0); visibility:hidden; transition:clip-path .55s cubic-bezier(.76,0,.24,1), visibility 0s .55s; counter-reset:nav -1; }}
+.st-key-navp_biz {{ counter-reset:nav 0; }}
+.st-key-navp_tech [data-testid="stElementContainer"], .st-key-navp_biz [data-testid="stElementContainer"] {{ width:100% !important; opacity:0; transform:translateY(28px); transition:opacity .2s, transform .2s; }}
+.st-key-navp_tech [data-testid="stElementContainer"]:has(.navintro), .st-key-navp_biz [data-testid="stElementContainer"]:has(.navintro) {{ grid-column:1 / -1; }}
+.navintro {{ font-family:{FONT_MONO}; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:{MUTED}; margin-bottom:1rem; white-space:normal; }}
+.st-key-topnav [class*="st-key-navp_"] [data-testid="stPageLink"] a {{ display:block; position:relative; width:100%; padding:.8rem 0 .9rem; border-bottom:1px solid rgba(255,255,255,.12); overflow:hidden; transition:padding-left .35s cubic-bezier(.2,.7,.1,1); }}
+.st-key-topnav [class*="st-key-navp_"] [data-testid="stPageLink"] a::after {{ content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:{PERSIMMON}; transform:scaleX(0); transform-origin:left; transition:transform .4s cubic-bezier(.76,0,.24,1); }}
+.st-key-topnav [class*="st-key-navp_"] [data-testid="stPageLink"] a:hover {{ padding-left:14px; }}
+.st-key-topnav [class*="st-key-navp_"] [data-testid="stPageLink"] a:hover::after {{ transform:scaleX(1); }}
+.st-key-topnav [class*="st-key-navp_"] [data-testid="stPageLink"] p {{ font-family:{FONT_DISPLAY}; font-size:clamp(1.1rem,2.1vw,1.9rem); line-height:1.15; letter-spacing:-.02em; white-space:normal; }}
+.st-key-topnav [class*="st-key-navp_"] [data-testid="stPageLink"] a:hover p {{ color:{PERSIMMON}; }}
+.st-key-topnav [class*="st-key-navp_"] [data-testid="stPageLink"] p::before {{ counter-increment:nav; content:counter(nav, decimal-leading-zero); display:block; font-family:{FONT_MONO}; font-size:.68rem; letter-spacing:.1em; color:{PERSIMMON}; margin-bottom:.25rem; }}
+/* open on hover, or on tap (the .open class); .nav-shut closes it right after a link is clicked */
+body:not(.nav-shut) .st-key-navg_tech:hover .st-key-navp_tech, body:not(.nav-shut) .st-key-navg_biz:hover .st-key-navp_biz, .st-key-navg_tech.open .st-key-navp_tech, .st-key-navg_biz.open .st-key-navp_biz {{ clip-path:inset(0 0 0 0); visibility:visible; transition:clip-path .55s cubic-bezier(.76,0,.24,1), visibility 0s; }}
+body:not(.nav-shut) [class*="st-key-navg_"]:hover .navlabel i, [class*="st-key-navg_"].open .navlabel i {{ transform:rotate(135deg); }}
+body:not(.nav-shut) [class*="st-key-navg_"]:hover [data-testid="stElementContainer"], [class*="st-key-navg_"].open [data-testid="stElementContainer"] {{ opacity:1; transform:none; transition:opacity .5s, transform .6s cubic-bezier(.2,.7,.1,1); }}
+[class*="st-key-navp_"] [data-testid="stElementContainer"]:nth-child(2) {{ transition-delay:0.045s !important; }}
+[class*="st-key-navp_"] [data-testid="stElementContainer"]:nth-child(3) {{ transition-delay:0.090s !important; }}
+[class*="st-key-navp_"] [data-testid="stElementContainer"]:nth-child(4) {{ transition-delay:0.135s !important; }}
+[class*="st-key-navp_"] [data-testid="stElementContainer"]:nth-child(5) {{ transition-delay:0.180s !important; }}
+[class*="st-key-navp_"] [data-testid="stElementContainer"]:nth-child(6) {{ transition-delay:0.225s !important; }}
+[class*="st-key-navp_"] [data-testid="stElementContainer"]:nth-child(7) {{ transition-delay:0.270s !important; }}
+[class*="st-key-navp_"] [data-testid="stElementContainer"]:nth-child(8) {{ transition-delay:0.315s !important; }}
+[class*="st-key-navp_"] [data-testid="stElementContainer"]:nth-child(9) {{ transition-delay:0.360s !important; }}
+[class*="st-key-navp_"] [data-testid="stElementContainer"]:nth-child(10) {{ transition-delay:0.405s !important; }}
+[class*="st-key-navp_"] [data-testid="stElementContainer"]:nth-child(11) {{ transition-delay:0.450s !important; }}
+@media (max-width:760px) {{ .st-key-navp_tech, .st-key-navp_biz {{ grid-template-columns:minmax(0,1fr); }} .st-key-topnav {{ gap:14px; }} }}
 .nextcard {{ {GLASS} border-color:rgba(255,138,76,.4); padding:1.5rem 1.6rem; margin-top:2.4rem; }}
 .nextcard h3 {{ font-size:clamp(1.6rem,3.2vw,2.5rem); margin:0; padding:0; }}
 </style>
@@ -219,12 +278,27 @@ REVEAL = """
   // scroll progress line at the top of the page
   doc.querySelectorAll('#fx-bar, #fx-ring').forEach(function (n) { n.remove(); });
   const bar = doc.createElement('div'); bar.id = 'fx-bar'; doc.body.appendChild(bar);
-  const main = doc.querySelector('[data-testid="stMain"]');
-  if (main) main.addEventListener('scroll', function () {
+  doc.addEventListener('scroll', function (ev) {
+    const main = ev.target;
+    if (!main.matches || !main.matches('[data-testid="stMain"]')) return;
     const max = main.scrollHeight - main.clientHeight;
     bar.style.transform = 'scaleX(' + (max > 0 ? main.scrollTop / max : 0) + ')';
     const title = doc.querySelector('.page-title');
     if (title && !reduced) { const y = main.scrollTop; title.style.transform = 'translateY(' + y * .22 + 'px)'; title.style.opacity = Math.max(0, 1 - y / 480); }
+  }, {signal: win.__fx.signal, passive: true, capture: true});
+
+  // menu: closes after a link is clicked, opens and closes by tapping on touch screens
+  doc.addEventListener('click', function (e) {
+    const t = e.target;
+    if (!t.closest) return;
+    const label = t.closest('.navlabel');
+    const group = label && label.closest('[class*="st-key-navg_"]');
+    doc.querySelectorAll('[class*="st-key-navg_"].open').forEach(function (g) { if (g !== group) g.classList.remove('open'); });
+    if (group) { doc.body.classList.remove('nav-shut'); group.classList.toggle('open'); }
+    if (t.closest('[class*="st-key-navp_"] a')) { doc.body.classList.add('nav-shut'); }
+  }, {signal: win.__fx.signal});
+  doc.addEventListener('mousemove', function (e) {
+    if (doc.body.classList.contains('nav-shut') && !(e.target.closest && e.target.closest('.st-key-topnav'))) doc.body.classList.remove('nav-shut');
   }, on);
 
   if (reduced) return;
@@ -235,12 +309,31 @@ REVEAL = """
     doc.addEventListener('mousemove', function (e) {
       ring.style.opacity = 1;
       ring.style.transform = 'translate3d(' + e.clientX + 'px,' + e.clientY + 'px,0)';
-      // embedded frames keep the mouse to themselves, so hide the ring instead of leaving it stuck
-      if (e.target.tagName === 'IFRAME') ring.style.opacity = 0;
       const hot = e.target.closest && e.target.closest('a, button, [role="button"], [data-baseweb="select"], input');
       ring.classList.toggle('hot', !!hot);
     }, on);
     doc.addEventListener('mouseleave', function () { ring.style.opacity = 0; }, on);
+    // embedded animations are separate pages, so they report the mouse back to the ring here
+    const hooked = new WeakSet();
+    function hook() {
+      doc.querySelectorAll('iframe').forEach(function (f) {
+        let fw, fd;
+        try { fw = f.contentWindow; fd = f.contentDocument; } catch (err) { return; }
+        if (!fw || !fd || !fd.body || hooked.has(fw) || fd.getElementById('field')) return;
+        hooked.add(fw);
+        fw.addEventListener('mousemove', function (e) {
+          const r = f.getBoundingClientRect();
+          ring.style.opacity = 1;
+          ring.style.transform = 'translate3d(' + (r.left + e.clientX) + 'px,' + (r.top + e.clientY) + 'px,0)';
+          ring.classList.toggle('hot', !!(e.target.closest && e.target.closest('a, button')));
+        }, {signal: win.__fx.signal, passive: true});
+      });
+    }
+    hook();
+    const hookMo = new win.MutationObserver(hook);
+    hookMo.observe(doc.body, {childList: true, subtree: true});
+    const hookTimer = win.setInterval(hook, 1500);
+    win.__fx.signal.addEventListener('abort', function () { hookMo.disconnect(); win.clearInterval(hookTimer); });
   }
 
   // panels rise and charts settle as they scroll into view
@@ -266,29 +359,67 @@ REVEAL = """
 
 
 # The technical dashboard runs in this order, starting with the summary.
-TECH_FLOW = [("views/home.py", "Project summary"), ("views/raw_data.py", "Raw data and EDA before cleaning"),
-             ("views/pipeline.py", "Merging and cleaning"), ("views/validation.py", "Validation"),
-             ("views/explore.py", "EDA after cleaning"), ("views/studio.py", "Chart studio"), ("views/features.py", "Features")]
+TECH_FLOW = [("views/home.py", "Project summary"), ("views/raw_data.py", "Raw data"), ("views/merging.py", "Merging"),
+             ("views/eda_before.py", "EDA before cleaning"), ("views/cleaning.py", "Cleaning"),
+             ("views/explore.py", "EDA after cleaning"), ("views/studio.py", "Chart studio"),
+             ("views/features.py", "Features"), ("views/conclusion.py", "Conclusion")]
+
+
+def top_menu(start, technical, business):
+    """Our own menu bar. Start is a plain link; the other two open a panel of real page links."""
+    with st.container(key="topnav"):
+        with st.container(key="navstart"):
+            st.page_link(start, label="Start")
+        for key, title, intro, pages in [("tech", "Technical overview", "For analysts · the project in order", technical),
+                                         ("biz", "Business overview", "For store managers · your store in plain words", business)]:
+            with st.container(key=f"navg_{key}"):
+                html(f'<div class="navlabel" tabindex="0">{title}<i></i></div>')
+                with st.container(key=f"navp_{key}"):
+                    html(f'<div class="navintro">{intro}</div>')
+                    for p in pages:
+                        st.page_link(p, label=p.title)
 
 
 def flow_top(path):
-    """Step rail at the top of each technical page."""
+    """Step rail at the top of each technical page. The summary comes before step 1."""
     i = [p for p, _ in TECH_FLOW].index(path)
-    bars = "".join(f'<i class="{"on" if k <= i else ""}"></i>' for k in range(len(TECH_FLOW)))
-    html(f'<div class="flow"><div class="flow-t">Step {i + 1} of {len(TECH_FLOW)} · {TECH_FLOW[i][1]}</div><div class="flow-b">{bars}</div></div>')
+    total = len(TECH_FLOW) - 1
+    bars = "".join(f'<i class="{"on" if k < i else ""}"></i>' for k in range(total))
+    label = f"Start here · {TECH_FLOW[0][1]}" if i == 0 else f"Step {i} of {total} · {TECH_FLOW[i][1]}"
+    html(f'<div class="flow"><div class="flow-t">{label}</div><div class="flow-b">{bars}</div></div>')
 
 
 def flow_next(path):
     """Big link to the next step at the bottom of each technical page."""
     i = [p for p, _ in TECH_FLOW].index(path)
-    if i + 1 < len(TECH_FLOW):
-        html(f'<div class="nextcard"><div class="eyebrow">Next step {i + 2} of {len(TECH_FLOW)}</div><h3>{TECH_FLOW[i + 1][1]}</h3></div>')
+    total = len(TECH_FLOW) - 1
+    if i + 1 <= total:
+        html(f'<div class="nextcard"><div class="eyebrow">Next · step {i + 1} of {total}</div><h3>{TECH_FLOW[i + 1][1]}</h3></div>')
         st.page_link(TECH_FLOW[i + 1][0], label=f"Continue to {TECH_FLOW[i + 1][1]}", icon=":material/arrow_forward:")
     else:
         html('<div class="nextcard"><div class="eyebrow">End of the technical overview</div><h3>That is the whole project.</h3></div>')
         st.page_link("views/mgr_dashboard.py", label="See the business overview", icon=":material/arrow_forward:")
     if i > 0:
         st.page_link(TECH_FLOW[i - 1][0], label=f"Back to {TECH_FLOW[i - 1][1]}", icon=":material/arrow_back:")
+
+
+# Embedded pages grow on small screens. This keeps the frame and Streamlit's wrappers the
+# same height as the content, so nothing is clipped or sits on top of the next section.
+FIT = """<script>
+(function () {
+  function fit() {
+    try {
+      const f = window.frameElement, h = Math.ceil(document.body.getBoundingClientRect().height) + 2;
+      f.style.height = h + 'px';
+      const wrap = f.closest('[data-testid="stElementContainer"]');
+      if (wrap) { wrap.style.flex = '0 0 ' + h + 'px'; wrap.style.height = h + 'px'; }
+    } catch (e) {}
+  }
+  fit();
+  new ResizeObserver(fit).observe(document.body);
+  addEventListener('load', fit);
+})();
+</script>"""
 
 
 def apply():
@@ -368,7 +499,7 @@ def card(meta, title, text):
 def ledger(headers, rows, numeric_cols=()):
     head = "".join(f"<th>{h}</th>" for h in headers)
     body = "".join(
-        "<tr>" + "".join(f'<td class="{"n" if j in numeric_cols else ""}">{v}</td>' for j, v in enumerate(r)) + "</tr>"
+        "<tr>" + "".join(f'<td data-label="{esc(headers[j])}" class="{"n" if j in numeric_cols else ""}">{v}</td>' for j, v in enumerate(r)) + "</tr>"
         for r in rows)
     html(f'<div class="ledger-wrap"><table class="ledger"><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>')
 

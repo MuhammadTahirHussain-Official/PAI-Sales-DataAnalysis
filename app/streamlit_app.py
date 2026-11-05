@@ -1,4 +1,4 @@
-"""Store Sales: first page, a technical overview and a business overview.
+"""Store Sales: welcome page, a technical overview and a business overview.
 
 Run from the repository root:
     streamlit run app/streamlit_app.py
@@ -24,21 +24,23 @@ st.set_page_config(page_title="Store Sales Ecuador", page_icon=":material/insigh
                    layout="wide", initial_sidebar_state="collapsed")
 theme.apply()
 
-pages = {
-    "Start": [st.Page("views/welcome.py", title="Welcome", default=True)],
-    "Technical overview": [
-        st.Page("views/home.py", title="1. Project summary", url_path="summary"),
-        st.Page("views/raw_data.py", title="2. Raw data and EDA before cleaning", url_path="raw-data"),
-        st.Page("views/pipeline.py", title="3. Merging and cleaning", url_path="pipeline"),
-        st.Page("views/validation.py", title="4. Validation", url_path="validation"),
-        st.Page("views/explore.py", title="5. EDA after cleaning", url_path="explore"),
-        st.Page("views/studio.py", title="6. Chart studio", url_path="studio"),
-        st.Page("views/features.py", title="7. Features", url_path="features"),
-    ],
-    "Business overview": [
-        st.Page("views/mgr_dashboard.py", title="Overview", url_path="manager"),
-        st.Page("views/mgr_products.py", title="Product calendar", url_path="manager-products"),
-        st.Page("views/mgr_insights.py", title="Insights and actions", url_path="manager-insights"),
-    ],
-}
-st.navigation(pages, position="top").run()
+start = st.Page("views/welcome.py", title="Start", default=True)
+technical = [
+    st.Page("views/home.py", title="Project summary", url_path="summary"),
+    st.Page("views/raw_data.py", title="Raw data", url_path="raw-data"),
+    st.Page("views/merging.py", title="Merging", url_path="merging"),
+    st.Page("views/eda_before.py", title="EDA before cleaning", url_path="eda-before"),
+    st.Page("views/cleaning.py", title="Cleaning", url_path="cleaning"),
+    st.Page("views/explore.py", title="EDA after cleaning", url_path="eda-after"),
+    st.Page("views/studio.py", title="Chart studio", url_path="studio"),
+    st.Page("views/features.py", title="Features", url_path="features"),
+    st.Page("views/conclusion.py", title="Conclusion", url_path="conclusion"),
+]
+business = [
+    st.Page("views/mgr_dashboard.py", title="Overview", url_path="manager"),
+    st.Page("views/mgr_products.py", title="Product calendar", url_path="manager-products"),
+    st.Page("views/mgr_insights.py", title="Insights and actions", url_path="manager-insights"),
+]
+page = st.navigation([start] + technical + business, position="hidden")
+theme.top_menu(start, technical, business)
+page.run()

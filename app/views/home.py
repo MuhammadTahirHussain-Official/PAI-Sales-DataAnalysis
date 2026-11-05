@@ -45,13 +45,13 @@ journey_data = {
 }
 theme.flow_top("views/home.py")
 page = (Path(__file__).resolve().parents[1] / "static" / "journey.html").read_text(encoding="utf-8")
-page = (page.replace("__FONTS__", theme.FONT_LINK).replace("__GSAP__", theme.gsap_scripts())
+page = (page.replace("__FONTS__", theme.FONT_LINK).replace("__GSAP__", theme.gsap_scripts()).replace("__FIT__", theme.FIT)
         .replace("__DATA__", json.dumps(journey_data)))
 st.iframe(page, height=890)
 
 st.link_button("Download the final clean data (CSV, 36 MB zip)", "https://github.com/MuhammadTahirHussain-Official/PAI-Sales-DataAnalysis/raw/main/downloads/cleaned_data.zip", type="primary")
 
-theme.chapter("Conclusion", "What the data tells us")
+theme.chapter("In short", "What the data tells us")
 theme.stats([
     ("31.3<small>%</small>", "rows with zero sales", "Kept: they are real, not errors.", True),
     ("+39<small>%</small>", "weekend lift", "Sunday is strongest, Thursday weakest."),
