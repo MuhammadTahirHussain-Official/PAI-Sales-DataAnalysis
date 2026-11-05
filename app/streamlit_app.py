@@ -10,6 +10,14 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+# Streamlit Cloud pulls new code without restarting, so old helper modules can stay in
+# memory. If any helper file changed, drop them so the new versions are imported.
+stamp = max(p.stat().st_mtime for p in (Path(__file__).parent / "lib").glob("*.py"))
+if getattr(sys, "_lib_stamp", stamp) != stamp:
+    for name in [m for m in sys.modules if m == "lib" or m.startswith("lib.")]:
+        del sys.modules[name]
+sys._lib_stamp = stamp
+
 from lib import theme  # noqa: E402
 
 st.set_page_config(page_title="Store Sales Ecuador", page_icon=":material/insights:",
