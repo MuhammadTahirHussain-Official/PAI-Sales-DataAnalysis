@@ -169,7 +169,7 @@ footer {{ visibility:hidden; }}
 .card, .stat {{ transition:transform .35s cubic-bezier(.2,.7,.1,1), border-color .35s; }}
 .card:hover, .stat:hover {{ transform:translateY(-4px); border-color:rgba(255,138,76,.55); }}
 #fx-bar {{ position:fixed; left:0; top:0; height:3px; width:100%; background:{PERSIMMON}; transform:scaleX(0); transform-origin:left; z-index:1000000; pointer-events:none; }}
-#fx-ring {{ position:fixed; left:-18px; top:-18px; width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,138,76,.75); pointer-events:none; z-index:1000000; opacity:0; transition:width .25s, height .25s, left .25s, top .25s, background .25s; }}
+#fx-ring {{ position:fixed; left:-18px; top:-18px; width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,138,76,.75); pointer-events:none; z-index:1000000; opacity:0; will-change:transform; transition:width .2s, height .2s, left .2s, top .2s, background .2s; }}
 #fx-ring.hot {{ width:58px; height:58px; left:-29px; top:-29px; background:rgba(255,138,76,.14); }}
 .flow {{ margin:0 0 .2rem; }}
 .flow-t {{ font-family:{FONT_MONO}; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:{INK_2}; margin-bottom:.55rem; }}
@@ -203,12 +203,17 @@ REVEAL = """
   const reduced = win.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // the glow on each panel follows the cursor
+  let glow = null;
   doc.addEventListener('mousemove', function (e) {
     const p = e.target.closest && e.target.closest(panels);
     if (!p) return;
-    const r = p.getBoundingClientRect();
-    p.style.setProperty('--mx', (e.clientX - r.left) + 'px');
-    p.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    if (!glow) win.requestAnimationFrame(function () {
+      const r = glow.p.getBoundingClientRect();
+      glow.p.style.setProperty('--mx', (glow.x - r.left) + 'px');
+      glow.p.style.setProperty('--my', (glow.y - r.top) + 'px');
+      glow = null;
+    });
+    glow = {p: p, x: e.clientX, y: e.clientY};
   }, on);
 
   // scroll progress line at the top of the page
@@ -227,9 +232,11 @@ REVEAL = """
   // a ring follows the cursor and opens over anything clickable
   if (win.matchMedia('(pointer: fine)').matches) {
     const ring = doc.createElement('div'); ring.id = 'fx-ring'; doc.body.appendChild(ring);
-    const rx = gsap.quickTo(ring, 'x', {duration: .35, ease: 'power3'}), ry = gsap.quickTo(ring, 'y', {duration: .35, ease: 'power3'});
     doc.addEventListener('mousemove', function (e) {
-      ring.style.opacity = 1; rx(e.clientX); ry(e.clientY);
+      ring.style.opacity = 1;
+      ring.style.transform = 'translate3d(' + e.clientX + 'px,' + e.clientY + 'px,0)';
+      // embedded frames keep the mouse to themselves, so hide the ring instead of leaving it stuck
+      if (e.target.tagName === 'IFRAME') ring.style.opacity = 0;
       const hot = e.target.closest && e.target.closest('a, button, [role="button"], [data-baseweb="select"], input');
       ring.classList.toggle('hot', !!hot);
     }, on);
@@ -279,7 +286,7 @@ def flow_next(path):
         st.page_link(TECH_FLOW[i + 1][0], label=f"Continue to {TECH_FLOW[i + 1][1]}", icon=":material/arrow_forward:")
     else:
         html('<div class="nextcard"><div class="eyebrow">End of the technical overview</div><h3>That is the whole project.</h3></div>')
-        st.page_link("views/mgr_dashboard.py", label="See it as a store manager", icon=":material/arrow_forward:")
+        st.page_link("views/mgr_dashboard.py", label="See the business overview", icon=":material/arrow_forward:")
     if i > 0:
         st.page_link(TECH_FLOW[i - 1][0], label=f"Back to {TECH_FLOW[i - 1][1]}", icon=":material/arrow_back:")
 

@@ -10,7 +10,7 @@ feat = data.load("features")
 
 theme.flow_top("views/features.py")
 theme.page_title(
-    "Technical dashboard",
+    "Technical overview",
     "Ready for a model, <em>without peeking</em>",
     "Notebook 05 turns the cleaned table into numbers a model can learn from. The rule behind every feature: "
     "use only information that would really be known at forecast time.")

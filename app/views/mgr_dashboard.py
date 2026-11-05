@@ -10,7 +10,7 @@ from lib import theme
 from lib.data import WEEKDAYS
 from lib.theme import fmt
 
-theme.page_title("Store manager view", "My <em>store</em>",
+theme.page_title("For store managers", "Business <em>overview</em>",
                  "Choose your store and month. Real sales from the cleaned data, explained without any technical words.")
 store, per, name = m.picker()
 rows, days = m.store_rows(store), m.store_days(store)

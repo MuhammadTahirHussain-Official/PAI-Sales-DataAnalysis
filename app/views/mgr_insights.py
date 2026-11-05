@@ -170,4 +170,4 @@ cols = st.columns(2)
 for i, (title, calc, show) in enumerate(metrics):
     vals = [("Your store", calc(mine)), ("Region average", calc(region)), ("Chain average", calc(per_day))]
     cols[i % 2].markdown(f'<div class="card" style="margin-bottom:1.5rem"><div class="meta">{title}</div>' + m.bars_html([(a, b, show(b)) for a, b in vals]) + "</div>", unsafe_allow_html=True)
-st.page_link("views/mgr_dashboard.py", label="Back to my store", icon=":material/arrow_back:")
+st.page_link("views/mgr_dashboard.py", label="Back to business overview", icon=":material/arrow_back:")

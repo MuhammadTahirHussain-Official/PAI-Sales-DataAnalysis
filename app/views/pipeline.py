@@ -12,7 +12,7 @@ C = S["clean"]
 
 theme.flow_top("views/pipeline.py")
 theme.page_title(
-    "Technical dashboard",
+    "Technical overview",
     "Merging and <em>cleaning</em>",
     "How the files were joined without losing or duplicating a single sales row, which values were missing after the join, "
     "and exactly which rule filled each of them.")

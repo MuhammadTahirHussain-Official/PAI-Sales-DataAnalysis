@@ -12,7 +12,7 @@ S = data.summary()
 
 theme.flow_top("views/validation.py")
 theme.page_title(
-    "Technical dashboard",
+    "Technical overview",
     "Every rule, <em>checked</em>",
     "Cleaning is only trustworthy if it is tested. The project checks itself in two ways: pandas assertions over all three million rows, "
     "and Pydantic models that describe what a valid row looks like and reject anything else.")

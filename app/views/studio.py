@@ -7,7 +7,7 @@ from lib import data, explain, theme
 
 theme.flow_top("views/studio.py")
 theme.page_title(
-    "Technical dashboard",
+    "Technical overview",
     "Chart <em>studio</em>",
     "Pick a table, any column for x and y, a chart type and filters. Hover any mark for its values; click a point to compare it with its neighbours.")
 

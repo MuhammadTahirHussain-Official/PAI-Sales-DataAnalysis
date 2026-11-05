@@ -12,7 +12,7 @@ R = S["raw"]
 
 theme.flow_top("views/raw_data.py")
 theme.page_title(
-    "Technical dashboard",
+    "Technical overview",
     "Raw data and <em>EDA before cleaning</em>",
     "Before anything is joined or cleaned, each file already tells a story: what is counted, what is missing and why. "
     "Each file below shows its columns, what every column means, and the charts that matter for it.")

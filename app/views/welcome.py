@@ -19,7 +19,7 @@ theme.html("""<style>
 </style>""")
 with st.container(key="doorlinks"):
     st.page_link("views/home.py", label="Technical overview")
-    st.page_link("views/mgr_dashboard.py", label="Store manager")
+    st.page_link("views/mgr_dashboard.py", label="Business overview")
 
 daily = data.load("daily")
 store_day = data.load("store_day")
@@ -35,7 +35,7 @@ ARROW = '<span class="arrow"><svg viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6
 doors = f"""
 <button class="door" data-go="summary"><span class="row"><span><span class="mono">For analysts</span><h2>Technical overview</h2></span>{ARROW}</span>
 <p>Starts with the project summary, then follows every step in order: raw data, merging, cleaning, validation, EDA and features.</p></button>
-<button class="door" data-go="manager"><span class="row"><span><span class="mono">For store managers</span><h2>Store manager</h2></span>{ARROW}</span>
+<button class="door" data-go="manager"><span class="row"><span><span class="mono">For store managers</span><h2>Business overview</h2></span>{ARROW}</span>
 <p>Your store in plain words: what sold, which days to staff up, what to reorder and what to do next.</p></button>"""
 
 page = (Path(__file__).resolve().parents[1] / "static" / "welcome.html").read_text(encoding="utf-8")

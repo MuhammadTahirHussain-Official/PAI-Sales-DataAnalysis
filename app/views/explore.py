@@ -10,7 +10,7 @@ from lib.data import MONTHS, WEEKDAYS
 
 theme.flow_top("views/explore.py")
 theme.page_title(
-    "Technical dashboard",
+    "Technical overview",
     "EDA <em>after cleaning</em>",
     "Ten questions, each with its own charts and controls, all on this page. Hover any chart for exact values. On the time series, "
     "click a point to get a summary of that day: how it compares with the days around it, and the most likely reasons.")

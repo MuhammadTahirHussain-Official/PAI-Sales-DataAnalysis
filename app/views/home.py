@@ -41,7 +41,7 @@ journey_data = {
     "tags": ["weekends +39%", "national holidays +26%", "earthquake month +17%"],
     "ends": ["Every missing value filled by a written rule", "No original sales value changed",
              "4 Pydantic models, 0 errors", "85 numeric features with no future data",
-             "Technical dashboard for analysts", "Store manager dashboard with actions"],
+             "Technical overview for analysts", "Business overview with actions for store managers"],
 }
 theme.flow_top("views/home.py")
 page = (Path(__file__).resolve().parents[1] / "static" / "journey.html").read_text(encoding="utf-8")

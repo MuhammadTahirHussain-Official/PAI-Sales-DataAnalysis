@@ -101,4 +101,4 @@ theme.html(f'<div class="explain"><div class="eyebrow">{day:%A} {day.day} {month
            f'<p>Average day: {fmt(avg)} units. Average {day:%A} this month: {fmt(same_wd)} units.</p>'
            f'<div class="eyebrow" style="margin-top:14px">Why this happened</div><ol>{"".join(f"<li>{r}</li>" for r in reasons)}</ol>'
            f'<div class="eyebrow" style="margin-top:14px">What to do</div><p>{action}</p></div>')
-st.page_link("views/mgr_dashboard.py", label="Back to my store", icon=":material/arrow_back:")
+st.page_link("views/mgr_dashboard.py", label="Back to business overview", icon=":material/arrow_back:")

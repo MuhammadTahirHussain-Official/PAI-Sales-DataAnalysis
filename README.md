@@ -8,7 +8,7 @@ An interactive Streamlit report on the Kaggle **Store Sales – Time Series Fore
 
 **Project summary (first step for technical users).** The whole project in one view: a GSAP animation of the six steps (raw data, merging, EDA before cleaning, cleaning, EDA after cleaning, conclusion) drawn from real numbers, plus the conclusions and links to both dashboards.
 
-**Technical dashboard**, for analysts. It runs in order from the summary, with a step rail at the top and a link to the next step at the bottom of each page:
+**Technical overview**, for analysts. It runs in order from the summary, with a step rail at the top and a link to the next step at the bottom of each page:
 
 | Page | What it shows |
 | --- | --- |
@@ -19,11 +19,11 @@ An interactive Streamlit report on the Kaggle **Store Sales – Time Series Fore
 | 5. Chart studio | Any table, any x, y and colour, chart type, aggregation, log axes, trend line, filters |
 | 6. Features | The no-leakage rule, feature groups, correlation with the target, encoding |
 
-**Store manager dashboard**, for non-technical users. It uses the structure of the team's manager prototype with real data for any of the 54 stores:
+**Business overview**, for store managers and other non-technical users. It uses the structure of the team's manager prototype with real data for any of the 54 stores:
 
 | Page | What it shows |
 | --- | --- |
-| My store | One-sentence summary, key numbers, all 33 products (click one to drill down), day-by-day line, 12-month trend, monthly goal (8% above last year), best weekdays, products to watch, Excel order list |
+| Overview | One-sentence summary, key numbers, all 33 products (click one to drill down), day-by-day line, 12-month trend, monthly goal (8% above last year), best weekdays, products to watch, Excel order list |
 | Product calendar | Colour calendar for one product; click a day to see why it was high or low and what to do |
 | Insights and actions | Prioritised next actions, promotion lift, holidays, weekends and payday, customers (observed vs filled), unusual days, comparison with region and chain averages |
 

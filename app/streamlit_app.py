@@ -1,4 +1,4 @@
-"""Store Sales: first page, a technical dashboard and a store manager dashboard.
+"""Store Sales: first page, a technical overview and a business overview.
 
 Run from the repository root:
     streamlit run app/streamlit_app.py
@@ -26,7 +26,7 @@ theme.apply()
 
 pages = {
     "Start": [st.Page("views/welcome.py", title="Welcome", default=True)],
-    "Technical dashboard": [
+    "Technical overview": [
         st.Page("views/home.py", title="1. Project summary", url_path="summary"),
         st.Page("views/raw_data.py", title="2. Raw data and EDA before cleaning", url_path="raw-data"),
         st.Page("views/pipeline.py", title="3. Merging and cleaning", url_path="pipeline"),
@@ -35,8 +35,8 @@ pages = {
         st.Page("views/studio.py", title="6. Chart studio", url_path="studio"),
         st.Page("views/features.py", title="7. Features", url_path="features"),
     ],
-    "Store manager dashboard": [
-        st.Page("views/mgr_dashboard.py", title="My store", url_path="manager"),
+    "Business overview": [
+        st.Page("views/mgr_dashboard.py", title="Overview", url_path="manager"),
         st.Page("views/mgr_products.py", title="Product calendar", url_path="manager-products"),
         st.Page("views/mgr_insights.py", title="Insights and actions", url_path="manager-insights"),
     ],

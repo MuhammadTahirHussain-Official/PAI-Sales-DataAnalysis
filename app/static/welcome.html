@@ -24,7 +24,7 @@ h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:500;font-size:min(9.
 .ln>span{display:inline-block}
 h1 em{font-style:normal;color:#FF8A4C}
 .doors{display:grid;grid-template-columns:1fr 1fr;gap:24px}
-.door{position:relative;display:block;text-align:left;width:100%;color:inherit;font:inherit;background:rgba(20,21,24,.62);border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:clamp(18px,2vw,28px);overflow:hidden;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transform-style:preserve-3d;will-change:transform;cursor:pointer}
+.door{position:relative;display:block;text-align:left;width:100%;color:inherit;font:inherit;background:rgba(20,21,24,.82);border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:clamp(18px,2vw,28px);overflow:hidden;transform-style:preserve-3d;will-change:transform;cursor:pointer}
 .door::before{content:"";position:absolute;inset:0;background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),rgba(255,138,76,.28),transparent 70%);opacity:0;transition:opacity .35s;pointer-events:none}
 .door:hover::before,.door:focus-visible::before{opacity:1}
 .door:hover,.door:focus-visible{border-color:#FF8A4C;outline:none}
@@ -115,7 +115,7 @@ function fit() { try { window.frameElement.style.height = window.parent.innerHei
 fit(); try { window.parent.addEventListener('resize', fit); } catch (e) {}
 
 // ---------------------------------------------------------------- particles
-const cv = document.getElementById('field'), ctx = cv.getContext('2d');
+const cv = document.getElementById('field'), ctx = cv.getContext('2d', {alpha: false});  // opaque canvas: far cheaper for the browser to show
 const N = 1782;                       // one dot for each store and product series
 let W, H, dpr, shapes = [], labels = [];
 const px = new Float32Array(N), py = new Float32Array(N), seed = new Float32Array(N);
@@ -141,7 +141,7 @@ function stack(values, a) {           // stacked dots, in proportion to the valu
   return [xs, ys, rowH];
 }
 function build() {
-  dpr = Math.min(devicePixelRatio || 1, 2);
+  dpr = 1;
   W = innerWidth; H = innerHeight;
   cv.width = W * dpr; cv.height = H * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -169,28 +169,45 @@ build();
 for (let i = 0; i < N; i++) { px[i] = W / 2; py[i] = H / 2; }
 addEventListener('resize', () => { build(); ScrollTrigger.refresh(); });
 
+let frame = 0, moved = 0;
 function draw(t) {
-  ctx.clearRect(0, 0, W, H);
+  if (++frame % 2) return;                 // 30 frames a second is plenty for drifting dots
   const k = Math.min(Math.floor(morph), shapes.length - 2), f = morph - k;
   const A = shapes[k], B = shapes[k + 1];
   const atField = morph < .5 || morph > 4.5;
+  moved = 0;
+  ctx.fillStyle = '#0E0F11';
+  ctx.fillRect(0, 0, W, H);
+  const size = atField ? 2 : 3;
+  const orange = new Path2D(), blue = new Path2D();
   for (let i = 0; i < N; i++) {
     const local = Math.min(1, Math.max(0, f * 1.5 - seed[i] * .5)), e = local * local * (3 - 2 * local);
     let tx = A[0][i] + (B[0][i] - A[0][i]) * e, ty = A[1][i] + (B[1][i] - A[1][i]) * e;
     if (atField) { tx += Math.sin(t * .0004 + i) * 14; ty += Math.cos(t * .0005 + i * 1.3) * 14; }
-    px[i] += (tx - px[i]) * .085; py[i] += (ty - py[i]) * .085;
+    const sx = (tx - px[i]) * .16, sy = (ty - py[i]) * .16;
+    px[i] += sx; py[i] += sy;
+    moved += Math.abs(sx) + Math.abs(sy);
     const dx = px[i] - mouse.x, dy = py[i] - mouse.y, d2 = dx * dx + dy * dy;
-    if (d2 < 15000) { const d = Math.sqrt(d2) || 1, p = (1 - d / 122) * 9; px[i] += dx / d * p; py[i] += dy / d * p; }
-    ctx.fillStyle = i % 5 === 0 ? 'rgba(127,183,201,.8)' : atField ? 'rgba(255,138,76,.5)' : 'rgba(255,138,76,.92)';
-    ctx.fillRect(px[i], py[i], atField ? 1.8 : 2.4, atField ? 1.8 : 2.4);
+    if (d2 < 15000) { const d = Math.sqrt(d2) || 1, p = (1 - d / 122) * 14; px[i] += dx / d * p; py[i] += dy / d * p; moved += p; }
+    (i % 5 ? orange : blue).rect(Math.round(px[i]), Math.round(py[i]), size, size);
   }
+  ctx.fillStyle = atField ? 'rgba(255,138,76,.5)' : 'rgba(255,138,76,.92)';
+  ctx.fill(orange);
+  ctx.fillStyle = 'rgba(127,183,201,.8)';
+  ctx.fill(blue);
   const near = Math.round(morph), alpha = Math.max(0, 1 - Math.abs(morph - near) * 4);
   if (labels[near] && alpha > 0) {
     ctx.font = "11px 'JetBrains Mono', monospace"; ctx.fillStyle = `rgba(201,199,193,${alpha})`;
     labels[near].forEach(l => { ctx.textAlign = l[3] || 'left'; ctx.fillText(l[0], l[1], l[2]); });
   }
 }
-gsap.ticker.add(time => draw(time * 1000));
+// when the dots have settled into a chart and nothing is moving, stop drawing altogether
+let lastMorph = -1, lastMouse = 0;
+gsap.ticker.add(time => {
+  const idle = morph >= .5 && morph <= 4.5 && moved < 2 && morph === lastMorph && performance.now() - lastMouse > 400;
+  lastMorph = morph;
+  if (!idle) draw(time * 1000);
+});
 
 // ---------------------------------------------------------------- scroll
 if (!reduced) {
@@ -220,10 +237,10 @@ if (!reduced) {
 
 // ---------------------------------------------------------------- cursor
 const dot = document.getElementById('dot'), ring = document.getElementById('ring'), rt = document.getElementById('rt');
-const dx = gsap.quickTo(dot, 'x', {duration: .08}), dy = gsap.quickTo(dot, 'y', {duration: .08});
-const rx = gsap.quickTo(ring, 'x', {duration: .4, ease: 'power3'}), ry = gsap.quickTo(ring, 'y', {duration: .4, ease: 'power3'});
+const dx = gsap.quickSetter(dot, 'x', 'px'), dy = gsap.quickSetter(dot, 'y', 'px');
+const rx = gsap.quickSetter(ring, 'x', 'px'), ry = gsap.quickSetter(ring, 'y', 'px');
 gsap.set([dot, ring], {autoAlpha: 0});
-addEventListener('mousemove', e => { if (mouse.x < -9000) gsap.to([dot, ring], {autoAlpha: 1, duration: .2}); mouse.x = e.clientX; mouse.y = e.clientY; dx(e.clientX); dy(e.clientY); rx(e.clientX); ry(e.clientY); });
+addEventListener('mousemove', e => { lastMouse = performance.now(); if (mouse.x < -9000) gsap.to([dot, ring], {autoAlpha: 1, duration: .2}); mouse.x = e.clientX; mouse.y = e.clientY; dx(e.clientX); dy(e.clientY); rx(e.clientX); ry(e.clientY); });
 document.addEventListener('mouseleave', () => { mouse.x = mouse.y = -9999; });
 
 // ---------------------------------------------------------------- doors: tilt, magnetic arrow, wipe
