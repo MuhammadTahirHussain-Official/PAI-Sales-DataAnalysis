@@ -163,6 +163,21 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {{ background: {PAPER}; }
 [data-testid="stPageLink"] a:hover {{ border-color:{PERSIMMON}; }}
 a {{ color:{TEAL}; }}
 footer {{ visibility:hidden; }}
+
+/* cursor glow, hover and scroll pieces */
+.stat, .card, .figcap, .insight, .story, .ledger-wrap, .action, .explain {{ background-image:radial-gradient(280px circle at var(--mx,-400px) var(--my,-400px), rgba(255,138,76,.14), transparent 70%); }}
+.card, .stat {{ transition:transform .35s cubic-bezier(.2,.7,.1,1), border-color .35s; }}
+.card:hover, .stat:hover {{ transform:translateY(-4px); border-color:rgba(255,138,76,.55); }}
+#fx-bar {{ position:fixed; left:0; top:0; height:3px; width:100%; background:{PERSIMMON}; transform:scaleX(0); transform-origin:left; z-index:1000000; pointer-events:none; }}
+#fx-ring {{ position:fixed; left:-18px; top:-18px; width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,138,76,.75); pointer-events:none; z-index:1000000; opacity:0; transition:width .25s, height .25s, left .25s, top .25s, background .25s; }}
+#fx-ring.hot {{ width:58px; height:58px; left:-29px; top:-29px; background:rgba(255,138,76,.14); }}
+.flow {{ margin:0 0 .2rem; }}
+.flow-t {{ font-family:{FONT_MONO}; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:{INK_2}; margin-bottom:.55rem; }}
+.flow-b {{ display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:6px; }}
+.flow-b i {{ display:block; height:4px; border-radius:4px; background:rgba(255,255,255,.12); }}
+.flow-b i.on {{ background:{PERSIMMON}; }}
+.nextcard {{ {GLASS} border-color:rgba(255,138,76,.4); padding:1.5rem 1.6rem; margin-top:2.4rem; }}
+.nextcard h3 {{ font-size:clamp(1.6rem,3.2vw,2.5rem); margin:0; padding:0; }}
 </style>
 """
 
@@ -174,29 +189,99 @@ def gsap_scripts(scroll_trigger=False):
     return "".join(f"<script>{(static / n).read_text(encoding='utf-8')}</script>" for n in names)
 
 
-# Panels fade in with GSAP as they scroll into view. They are visible by default,
-# so if a script is ever blocked every panel and chart still shows.
+# Site-wide motion, added from a small hidden frame. Panels are visible by default, so if a
+# script is ever blocked every panel and chart still shows.
 REVEAL = """
 <script>
 (function () {
   gsap.ticker.lagSmoothing(0);
   const doc = window.parent.document, win = window.parent;
-  if (win.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const sel = '.stat, .card, .figcap, .insight, .chapter, .story, .ledger-wrap, .action, [data-testid="stPlotlyChart"]';
+  if (win.__fx) win.__fx.abort();
+  win.__fx = new win.AbortController();
+  const on = {signal: win.__fx.signal, passive: true};
+  const panels = '.stat, .card, .figcap, .insight, .story, .ledger-wrap, .action, .explain';
+  const reduced = win.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // the glow on each panel follows the cursor
+  doc.addEventListener('mousemove', function (e) {
+    const p = e.target.closest && e.target.closest(panels);
+    if (!p) return;
+    const r = p.getBoundingClientRect();
+    p.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+    p.style.setProperty('--my', (e.clientY - r.top) + 'px');
+  }, on);
+
+  // scroll progress line at the top of the page
+  doc.querySelectorAll('#fx-bar, #fx-ring').forEach(function (n) { n.remove(); });
+  const bar = doc.createElement('div'); bar.id = 'fx-bar'; doc.body.appendChild(bar);
+  const main = doc.querySelector('[data-testid="stMain"]');
+  if (main) main.addEventListener('scroll', function () {
+    const max = main.scrollHeight - main.clientHeight;
+    bar.style.transform = 'scaleX(' + (max > 0 ? main.scrollTop / max : 0) + ')';
+    const title = doc.querySelector('.page-title');
+    if (title && !reduced) { const y = main.scrollTop; title.style.transform = 'translateY(' + y * .22 + 'px)'; title.style.opacity = Math.max(0, 1 - y / 480); }
+  }, on);
+
+  if (reduced) return;
+
+  // a ring follows the cursor and opens over anything clickable
+  if (win.matchMedia('(pointer: fine)').matches) {
+    const ring = doc.createElement('div'); ring.id = 'fx-ring'; doc.body.appendChild(ring);
+    const rx = gsap.quickTo(ring, 'x', {duration: .35, ease: 'power3'}), ry = gsap.quickTo(ring, 'y', {duration: .35, ease: 'power3'});
+    doc.addEventListener('mousemove', function (e) {
+      ring.style.opacity = 1; rx(e.clientX); ry(e.clientY);
+      const hot = e.target.closest && e.target.closest('a, button, [role="button"], [data-baseweb="select"], input');
+      ring.classList.toggle('hot', !!hot);
+    }, on);
+    doc.addEventListener('mouseleave', function () { ring.style.opacity = 0; }, on);
+  }
+
+  // panels rise and charts settle as they scroll into view
+  const sel = panels + ', .chapter, [data-testid="stPlotlyChart"]';
   const seen = new WeakSet();
   const io = new win.IntersectionObserver(function (items) {
     items.forEach(function (it) {
       if (!it.isIntersecting) return;
       io.unobserve(it.target);
-      gsap.fromTo(it.target, {opacity: 0, y: 26}, {opacity: 1, y: 0, duration: .75, ease: 'power3.out', clearProps: 'opacity,transform'});
+      const chart = it.target.matches('[data-testid="stPlotlyChart"]');
+      gsap.fromTo(it.target, {opacity: 0, y: chart ? 40 : 28, scale: chart ? .97 : 1},
+                  {opacity: 1, y: 0, scale: 1, duration: chart ? .9 : .7, ease: 'power3.out', clearProps: 'opacity,transform'});
     });
-  }, {threshold: 0.05});
+  }, {threshold: 0.06});
   function scan() { doc.querySelectorAll(sel).forEach(function (el) { if (!seen.has(el)) { seen.add(el); io.observe(el); } }); }
   scan();
-  new win.MutationObserver(scan).observe(doc.body, {childList: true, subtree: true});
+  const mo = new win.MutationObserver(scan);
+  mo.observe(doc.body, {childList: true, subtree: true});
+  win.__fx.signal.addEventListener('abort', function () { mo.disconnect(); io.disconnect(); });
 })();
 </script>
 """
+
+
+# The technical dashboard runs in this order, starting with the summary.
+TECH_FLOW = [("views/home.py", "Project summary"), ("views/raw_data.py", "Raw data and EDA before cleaning"),
+             ("views/pipeline.py", "Merging and cleaning"), ("views/validation.py", "Validation"),
+             ("views/explore.py", "EDA after cleaning"), ("views/studio.py", "Chart studio"), ("views/features.py", "Features")]
+
+
+def flow_top(path):
+    """Step rail at the top of each technical page."""
+    i = [p for p, _ in TECH_FLOW].index(path)
+    bars = "".join(f'<i class="{"on" if k <= i else ""}"></i>' for k in range(len(TECH_FLOW)))
+    html(f'<div class="flow"><div class="flow-t">Step {i + 1} of {len(TECH_FLOW)} · {TECH_FLOW[i][1]}</div><div class="flow-b">{bars}</div></div>')
+
+
+def flow_next(path):
+    """Big link to the next step at the bottom of each technical page."""
+    i = [p for p, _ in TECH_FLOW].index(path)
+    if i + 1 < len(TECH_FLOW):
+        html(f'<div class="nextcard"><div class="eyebrow">Next step {i + 2} of {len(TECH_FLOW)}</div><h3>{TECH_FLOW[i + 1][1]}</h3></div>')
+        st.page_link(TECH_FLOW[i + 1][0], label=f"Continue to {TECH_FLOW[i + 1][1]}", icon=":material/arrow_forward:")
+    else:
+        html('<div class="nextcard"><div class="eyebrow">End of the technical overview</div><h3>That is the whole project.</h3></div>')
+        st.page_link("views/mgr_dashboard.py", label="See it as a store manager", icon=":material/arrow_forward:")
+    if i > 0:
+        st.page_link(TECH_FLOW[i - 1][0], label=f"Back to {TECH_FLOW[i - 1][1]}", icon=":material/arrow_back:")
 
 
 def apply():

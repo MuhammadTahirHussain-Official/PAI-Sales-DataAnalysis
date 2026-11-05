@@ -1,0 +1,270 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="__FONTS__">
+<style>
+*{box-sizing:border-box;margin:0}
+html{background:#0E0F11}
+body{background:#0E0F11;color:#EDEAE3;font-family:'Hanken Grotesk',Arial,sans-serif;overflow-x:hidden}
+html.fine,html.fine *{cursor:none!important}
+#field{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+section,.marquee{position:relative;z-index:2}
+.mono{font:500 12px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#FF8A4C}
+
+/* preloader and page wipe */
+#load{position:fixed;inset:0;z-index:50;background:#FF8A4C;color:#14110E;display:flex;align-items:flex-end;justify-content:space-between;padding:4vw;font-family:'Bricolage Grotesque',sans-serif}
+#load b{font-weight:500;font-size:clamp(44px,11vw,170px);line-height:.9;letter-spacing:-.04em}
+#load span{font:500 13px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;padding-bottom:1vw}
+#wipe{position:fixed;inset:0;z-index:60;background:#FF8A4C;clip-path:circle(0% at 50% 50%);pointer-events:none}
+
+/* hero */
+.hero{min-height:100vh;padding:clamp(20px,3vw,44px);display:flex;flex-direction:column;justify-content:space-between;gap:24px}
+.top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.top .mono:last-child{color:#9C9CA4}
+h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:500;font-size:min(9.4vw,15vh);line-height:.94;letter-spacing:-.04em}
+.ln{display:block;overflow:hidden;padding-bottom:.08em;margin-bottom:-.08em}
+.ln>span{display:inline-block}
+h1 em{font-style:normal;color:#FF8A4C}
+.doors{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.door{position:relative;display:block;text-align:left;width:100%;color:inherit;font:inherit;background:rgba(20,21,24,.62);border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:clamp(18px,2vw,28px);overflow:hidden;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transform-style:preserve-3d;will-change:transform;cursor:pointer}
+.door::before{content:"";position:absolute;inset:0;background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),rgba(255,138,76,.28),transparent 70%);opacity:0;transition:opacity .35s;pointer-events:none}
+.door:hover::before,.door:focus-visible::before{opacity:1}
+.door:hover,.door:focus-visible{border-color:#FF8A4C;outline:none}
+.door .row{position:relative;display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.door h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:500;font-size:clamp(26px,3.3vw,50px);line-height:1;letter-spacing:-.03em;margin:10px 0}
+.door p{position:relative;color:#C9C7C1;font-size:clamp(14px,1.15vw,17px);line-height:1.5;max-width:52ch}
+.arrow{flex:0 0 auto;width:clamp(44px,4.4vw,64px);height:clamp(44px,4.4vw,64px);border-radius:50%;border:1px solid rgba(255,255,255,.25);display:grid;place-items:center;transition:background .3s,border-color .3s}
+.arrow svg{width:42%;height:42%;stroke:#EDEAE3;fill:none;stroke-width:2;transition:stroke .3s}
+.door:hover .arrow{background:#FF8A4C;border-color:#FF8A4C}.door:hover .arrow svg{stroke:#14110E}
+.cue{display:flex;justify-content:center;gap:10px;align-items:center;color:#9C9CA4;font:400 11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase}
+.cue i{display:block;width:1px;height:26px;background:linear-gradient(#FF8A4C,transparent);transform-origin:top}
+
+/* story, pinned while the particles change shape */
+#story{height:100vh;overflow:hidden}
+.ch{position:absolute;left:clamp(20px,5vw,80px);top:50%;width:min(38vw,520px);transform:translateY(-50%);opacity:0}
+.ch h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:500;font-size:clamp(32px,4.4vw,68px);line-height:1;letter-spacing:-.03em;margin:12px 0 16px}
+.ch p{color:#C9C7C1;font-size:clamp(15px,1.3vw,19px);line-height:1.55}
+.ch .big{display:block;font:500 clamp(14px,1.1vw,16px) 'JetBrains Mono',monospace;color:#F2D479;margin-top:16px;line-height:1.6}
+.bar{position:fixed;left:0;top:0;height:3px;width:100%;background:#FF8A4C;transform-origin:left;transform:scaleX(0);z-index:40}
+
+.marquee{overflow:hidden;white-space:nowrap;padding:5vh 0;border-top:1px solid rgba(255,255,255,.1);border-bottom:1px solid rgba(255,255,255,.1);background:rgba(14,15,17,.55)}
+.marquee div{display:inline-block;font:500 clamp(40px,7vw,110px)/1 'Bricolage Grotesque',sans-serif;letter-spacing:-.03em;color:transparent;-webkit-text-stroke:1px rgba(237,234,227,.55);will-change:transform}
+.marquee b{font-weight:500;color:#FF8A4C;-webkit-text-stroke:0}
+
+.end{min-height:100vh;padding:clamp(20px,3vw,44px);display:flex;flex-direction:column;justify-content:center;gap:36px}
+.end h2.title{font:500 min(9vw,15vh)/.95 'Bricolage Grotesque',sans-serif;letter-spacing:-.04em}
+.team{color:#9C9CA4;font-size:14px;line-height:1.6}
+
+/* cursor */
+#dot,#ring{position:fixed;left:0;top:0;pointer-events:none;z-index:70;border-radius:50%;display:none}
+html.fine #dot,html.fine #ring{display:block}
+#dot{width:8px;height:8px;margin:-4px 0 0 -4px;background:#FF8A4C}
+#ring{width:44px;height:44px;margin:-22px 0 0 -22px;border:1px solid rgba(237,234,227,.6);display:none;align-items:center;justify-content:center;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#14110E}
+html.fine #ring{display:flex}
+
+.still #story{height:auto;overflow:visible;padding:40px 0}
+.still .ch{position:static;transform:none;opacity:1;width:auto;margin:40px 5vw}
+.still #load{display:none}
+@media(max-width:760px){
+  .doors{grid-template-columns:1fr;gap:14px}
+  h1{font-size:min(11.5vw,12vh)}
+  .door{padding:16px 18px}.door h2{font-size:24px;margin:6px 0 0}.door p{display:none}
+  .arrow{width:42px;height:42px}
+  .ch{left:20px;right:20px;width:auto;top:9%;transform:none}
+  .ch h2{font-size:30px;margin:8px 0 10px}.ch p{font-size:14px}.ch .big{margin-top:8px;font-size:12px}
+  .cue{display:none}
+}
+</style></head><body>
+<canvas id="field"></canvas>
+<div class="bar" id="bar"></div>
+<div id="load"><b id="lc">0</b><span>sales rows loaded</span></div>
+<div id="wipe"></div>
+<div id="dot"></div><div id="ring"><span id="rt"></span></div>
+
+<section class="hero">
+  <div class="top"><span class="mono">Store Sales Ecuador</span><span class="mono">2013 to 2017 · 54 stores · 33 products</span></div>
+  <h1><span class="ln"><span>What three million</span></span><span class="ln"><span>sales rows</span></span><span class="ln"><span><em>actually</em> say.</span></span></h1>
+  <div class="doors">__DOORS__</div>
+  <div class="cue"><i></i>Scroll to see the data move</div>
+</section>
+
+<section id="story">
+  <div class="ch"><span class="mono">Five years</span><h2>Sales keep growing.</h2><p>Each dot sits under the real weekly sales line. Sales roughly doubled, with a jump every December and a stop every 1 January.</p></div>
+  <div class="ch"><span class="mono">Before cleaning</span><h2>One row in three sells nothing.</h2><p>The dots are now shared out in proportion to the rows in each sales range. The tall stack is the exact zero: real, and kept.</p><span class="big">31.3% zero rows · skewness 7.36</span></div>
+  <div class="ch"><span class="mono">After cleaning</span><h2>The week sets the rhythm.</h2><p>Average sales per store by weekday. Sunday is strongest and Thursday weakest, so staffing matters more than payday.</p><span class="big">weekends +39% · paydays +1%</span></div>
+  <div class="ch"><span class="mono">Validated</span><h2>Every series, complete.</h2><p>One dot for each of the 54 stores × 33 products. Every gap was filled by a written rule and checked with Pydantic.</p><span class="big">245,784 transaction gaps · 928,422 oil gaps · 0 errors</span></div>
+</section>
+
+<div class="marquee"><div id="mq"><b>3,000,888</b> rows · <b>5</b> files joined · <b>11/11</b> integrity checks · <b>85</b> features · <b>0</b> validation errors · <b>3,000,888</b> rows · <b>5</b> files joined · <b>11/11</b> integrity checks · <b>85</b> features · <b>0</b> validation errors</div></div>
+
+<section class="end">
+  <h2 class="title">Choose your<br>way in.</h2>
+  <div class="doors">__DOORS__</div>
+  <p class="team">Usman Ahmad · Muhammad Anas Alam · Muhammad Tahir Hussain · Hamza Noor</p>
+</section>
+__GSAP__
+<script>
+const D = __DATA__;
+gsap.registerPlugin(ScrollTrigger);
+gsap.ticker.lagSmoothing(0);
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fine = matchMedia('(pointer: fine)').matches;
+if (reduced) document.documentElement.classList.add('still');
+if (fine) document.documentElement.classList.add('fine');
+
+// the frame fills the window and this page scrolls inside it
+function fit() { try { window.frameElement.style.height = window.parent.innerHeight + 'px'; } catch (e) {} }
+fit(); try { window.parent.addEventListener('resize', fit); } catch (e) {}
+
+// ---------------------------------------------------------------- particles
+const cv = document.getElementById('field'), ctx = cv.getContext('2d');
+const N = 1782;                       // one dot for each store and product series
+let W, H, dpr, shapes = [], labels = [];
+const px = new Float32Array(N), py = new Float32Array(N), seed = new Float32Array(N);
+for (let i = 0; i < N; i++) seed[i] = Math.random();
+let morph = 0, mouse = {x: -9999, y: -9999};
+
+function area() {   // where the charts are drawn: right side, or lower part on a phone
+  return W > 760 ? {x: W * .46, y: H * .16, w: W * .49, h: H * .68} : {x: W * .06, y: H * .46, w: W * .88, h: H * .46};
+}
+function stack(values, a) {           // stacked dots, in proportion to the values
+  const total = values.reduce((s, v) => s + v, 0), xs = [], ys = [];
+  const colW = a.w / values.length, gap = Math.max(colW * (values.length < 10 ? .3 : .16), 1);
+  let counts = values.map(v => Math.round(v / total * N)), diff = N - counts.reduce((s, c) => s + c, 0);
+  counts[counts.indexOf(Math.max(...counts))] += diff;
+  const tallest = Math.max(...counts), perCol = Math.max(1, Math.floor((colW - gap) / 5));
+  const rowH = Math.min(a.h / Math.ceil(tallest / perCol), 16);
+  counts.forEach((c, k) => {
+    for (let j = 0; j < c; j++) {
+      xs.push(a.x + k * colW + (j % perCol) * ((colW - gap) / perCol));
+      ys.push(a.y + a.h - Math.floor(j / perCol) * rowH);
+    }
+  });
+  return [xs, ys, rowH];
+}
+function build() {
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  W = innerWidth; H = innerHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const a = area();
+  // 0 open field
+  const fx = [], fy = [];
+  for (let i = 0; i < N; i++) { fx.push(seed[i] * W); fy.push(Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1 * H); }
+  // 1 area under the real weekly sales line
+  const lx = [], ly = [], mx = Math.max(...D.weekly), n = D.weekly.length;
+  for (let i = 0; i < N; i++) {
+    const t = i / N, v = D.weekly[Math.min(n - 1, Math.floor(t * n))];
+    const top = a.y + a.h - v / mx * a.h, depth = Math.pow((Math.abs(Math.sin(i * 7.13)) ), 3);
+    lx.push(a.x + t * a.w); ly.push(top + depth * (a.y + a.h - top));
+  }
+  // 2 real histogram, 3 real weekdays, 4 one dot per store and product
+  const [hx, hy] = stack(D.hist, a), [wx, wy] = stack(D.weekday, a);
+  const gx = [], gy = [];
+  for (let s = 0; s < 54; s++) for (let f = 0; f < 33; f++) { gx.push(a.x + s / 53 * a.w); gy.push(a.y + f / 32 * a.h); }
+  shapes = [[fx, fy], [lx, ly], [hx, hy], [wx, wy], [gx, gy], [fx, fy]];
+  const base = a.y + a.h + 22, colW = a.w / 7;
+  labels = [[], D.years.map((y, i) => [y, a.x + i / 4.62 * a.w, base]), [['0', a.x, base], ['units sold per row, log bins', a.x + a.w, base, 'right']],
+            D.days.map((d, i) => [d, a.x + (i + .35) * colW, base]), [['54 stores', a.x, a.y + a.h + 22], ['33 products', a.x + a.w, a.y - 12, 'right']], []];
+}
+build();
+for (let i = 0; i < N; i++) { px[i] = W / 2; py[i] = H / 2; }
+addEventListener('resize', () => { build(); ScrollTrigger.refresh(); });
+
+function draw(t) {
+  ctx.clearRect(0, 0, W, H);
+  const k = Math.min(Math.floor(morph), shapes.length - 2), f = morph - k;
+  const A = shapes[k], B = shapes[k + 1];
+  const atField = morph < .5 || morph > 4.5;
+  for (let i = 0; i < N; i++) {
+    const local = Math.min(1, Math.max(0, f * 1.5 - seed[i] * .5)), e = local * local * (3 - 2 * local);
+    let tx = A[0][i] + (B[0][i] - A[0][i]) * e, ty = A[1][i] + (B[1][i] - A[1][i]) * e;
+    if (atField) { tx += Math.sin(t * .0004 + i) * 14; ty += Math.cos(t * .0005 + i * 1.3) * 14; }
+    px[i] += (tx - px[i]) * .085; py[i] += (ty - py[i]) * .085;
+    const dx = px[i] - mouse.x, dy = py[i] - mouse.y, d2 = dx * dx + dy * dy;
+    if (d2 < 15000) { const d = Math.sqrt(d2) || 1, p = (1 - d / 122) * 9; px[i] += dx / d * p; py[i] += dy / d * p; }
+    ctx.fillStyle = i % 5 === 0 ? 'rgba(127,183,201,.8)' : atField ? 'rgba(255,138,76,.5)' : 'rgba(255,138,76,.92)';
+    ctx.fillRect(px[i], py[i], atField ? 1.8 : 2.4, atField ? 1.8 : 2.4);
+  }
+  const near = Math.round(morph), alpha = Math.max(0, 1 - Math.abs(morph - near) * 4);
+  if (labels[near] && alpha > 0) {
+    ctx.font = "11px 'JetBrains Mono', monospace"; ctx.fillStyle = `rgba(201,199,193,${alpha})`;
+    labels[near].forEach(l => { ctx.textAlign = l[3] || 'left'; ctx.fillText(l[0], l[1], l[2]); });
+  }
+}
+gsap.ticker.add(time => draw(time * 1000));
+
+// ---------------------------------------------------------------- scroll
+if (!reduced) {
+  gsap.to('#bar', {scaleX: 1, ease: 'none', scrollTrigger: {start: 0, end: 'max', scrub: .2}});
+  ScrollTrigger.create({trigger: '.hero', start: 'top top', end: 'bottom top', scrub: .6, onUpdate: s => { morph = s.progress; }});
+  gsap.to('.hero h1', {yPercent: -22, opacity: .15, ease: 'none', scrollTrigger: {trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true}});
+  const chs = gsap.utils.toArray('.ch');
+  const tl = gsap.timeline({scrollTrigger: {trigger: '#story', start: 'top top', end: () => '+=' + innerHeight * 4, pin: true, scrub: .6,
+    onUpdate: s => {
+      const seg = Math.min(s.progress * 3, 2.999), k = Math.floor(seg);
+      morph = 1 + k + gsap.utils.clamp(0, 1, (seg - k - .25) / .5);
+    }}});
+  const slots = [[0, .09], [.21, .41], [.53, .75], [.86, 1]];
+  chs.forEach((c, i) => {
+    const [a, b] = slots[i];
+    if (i === 0) tl.set(c, {opacity: 1, y: 0}, 0);
+    else tl.fromTo(c, {opacity: 0, y: 46}, {opacity: 1, y: 0, duration: .06, ease: 'power2.out', immediateRender: false}, a);
+    if (i < chs.length - 1) tl.to(c, {opacity: 0, y: -46, duration: .05, ease: 'power2.in'}, b);
+  });
+  tl.to({}, {duration: .001}, 1);
+  ScrollTrigger.create({trigger: '.end', start: 'top bottom', end: 'top top', scrub: .6, onUpdate: s => { morph = 4 + s.progress; }});
+  gsap.fromTo('#mq', {xPercent: 0}, {xPercent: -42, ease: 'none', scrollTrigger: {trigger: '.marquee', start: 'top bottom', end: 'bottom top', scrub: .5}});
+  gsap.from('.end .title, .end .door, .end .team', {autoAlpha: 0, y: 60, stagger: .1, duration: .8, ease: 'power3.out', scrollTrigger: {trigger: '.end', start: 'top 62%', toggleActions: 'play none none reverse'}});
+} else {
+  morph = 1;
+}
+
+// ---------------------------------------------------------------- cursor
+const dot = document.getElementById('dot'), ring = document.getElementById('ring'), rt = document.getElementById('rt');
+const dx = gsap.quickTo(dot, 'x', {duration: .08}), dy = gsap.quickTo(dot, 'y', {duration: .08});
+const rx = gsap.quickTo(ring, 'x', {duration: .4, ease: 'power3'}), ry = gsap.quickTo(ring, 'y', {duration: .4, ease: 'power3'});
+gsap.set([dot, ring], {autoAlpha: 0});
+addEventListener('mousemove', e => { if (mouse.x < -9000) gsap.to([dot, ring], {autoAlpha: 1, duration: .2}); mouse.x = e.clientX; mouse.y = e.clientY; dx(e.clientX); dy(e.clientY); rx(e.clientX); ry(e.clientY); });
+document.addEventListener('mouseleave', () => { mouse.x = mouse.y = -9999; });
+
+// ---------------------------------------------------------------- doors: tilt, magnetic arrow, wipe
+document.querySelectorAll('.door').forEach(door => {
+  const arrow = door.querySelector('.arrow');
+  door.addEventListener('mousemove', e => {
+    const r = door.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    door.style.setProperty('--mx', x + 'px'); door.style.setProperty('--my', y + 'px');
+    if (reduced) return;
+    gsap.to(door, {rotateY: (x / r.width - .5) * 7, rotateX: (.5 - y / r.height) * 7, transformPerspective: 900, duration: .5, overwrite: 'auto'});
+    const a = arrow.getBoundingClientRect();
+    gsap.to(arrow, {x: (e.clientX - a.left - a.width / 2) * .22, y: (e.clientY - a.top - a.height / 2) * .22, duration: .4, overwrite: 'auto'});
+  });
+  door.addEventListener('mouseenter', () => { gsap.to(ring, {scale: 1.9, backgroundColor: '#FF8A4C', borderColor: '#FF8A4C', duration: .3}); rt.textContent = 'ENTER'; gsap.set(rt, {scale: .53}); gsap.to(dot, {autoAlpha: 0, duration: .15}); });
+  door.addEventListener('mouseleave', () => { gsap.to(ring, {scale: 1, backgroundColor: 'rgba(0,0,0,0)', borderColor: 'rgba(237,234,227,.6)', duration: .3}); rt.textContent = ''; gsap.to(dot, {autoAlpha: 1, duration: .15}); gsap.to(door, {rotateX: 0, rotateY: 0, duration: .6}); gsap.to(arrow, {x: 0, y: 0, duration: .6}); });
+  door.addEventListener('click', e => {
+    const go = () => {
+      const target = door.dataset.go;
+      try {
+        const link = window.parent.document.querySelector(`.st-key-doorlinks a[href*="${target}"]`);
+        if (link) { link.click(); return; }
+        window.parent.location.href = window.parent.location.pathname.replace(/[^/]*$/, '') + target;
+      } catch (err) { window.location.href = '/' + target; }
+    };
+    if (reduced) return go();
+    gsap.fromTo('#wipe', {clipPath: `circle(0% at ${e.clientX}px ${e.clientY}px)`}, {clipPath: `circle(150% at ${e.clientX}px ${e.clientY}px)`, duration: .6, ease: 'power3.inOut', onComplete: go});
+  });
+});
+
+// ---------------------------------------------------------------- opening
+if (!reduced) {
+  const o = {v: 0}, lc = document.getElementById('lc');
+  gsap.set('.ln > span', {yPercent: 110});
+  gsap.set('.hero .top, .hero .door, .cue', {autoAlpha: 0, y: 26});
+  gsap.timeline()
+    .to(o, {v: 3000888, duration: .75, ease: 'power2.out', onUpdate: () => { lc.textContent = Math.round(o.v).toLocaleString('en-US'); }})
+    .to('#load', {yPercent: -100, duration: .6, ease: 'power4.inOut'}, '+=.08')
+    .to('.ln > span', {yPercent: 0, stagger: .08, duration: .85, ease: 'power4.out'}, '-=.28')
+    .to('.hero .top', {autoAlpha: 1, y: 0, duration: .45}, '-=.65')
+    .to('.hero .door', {autoAlpha: 1, y: 0, stagger: .1, duration: .6, ease: 'power3.out'}, '-=.6')
+    .to('.cue', {autoAlpha: 1, y: 0, duration: .4}, '-=.3');
+  gsap.fromTo('.cue i', {scaleY: 0}, {scaleY: 1, duration: 1, repeat: -1, ease: 'power2.inOut'});
+}
+</script></body></html>

@@ -15,7 +15,7 @@ from playwright.sync_api import TimeoutError as PlaywrightTimeout
 from playwright.sync_api import sync_playwright
 
 WAKE_TEXT = "get this app back up"
-READY_TEXT = "explained."  # last word of the headline on the first page
+READY_TEXT = "Choose your"  # heading near the end of the welcome page
 URL = sys.argv[1] if len(sys.argv) > 1 else ""
 
 

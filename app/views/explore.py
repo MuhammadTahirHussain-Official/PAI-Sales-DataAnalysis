@@ -8,8 +8,9 @@ from plotly.subplots import make_subplots
 from lib import data, explain, theme
 from lib.data import MONTHS, WEEKDAYS
 
+theme.flow_top("views/explore.py")
 theme.page_title(
-    "Technical · Step 4",
+    "Technical dashboard",
     "EDA <em>after cleaning</em>",
     "Ten questions, each with its own charts and controls, all on this page. Hover any chart for exact values. On the time series, "
     "click a point to get a summary of that day: how it compares with the days around it, and the most likely reasons.")
@@ -477,3 +478,5 @@ def ch_corr():
 for chapter_view in [ch_time, ch_rhythm, ch_holidays, ch_families, ch_stores_, ch_promotions,
                      ch_oil, ch_earthquake, ch_distribution, ch_corr]:
     chapter_view()
+
+theme.flow_next("views/explore.py")

@@ -17,14 +17,15 @@ st.set_page_config(page_title="Store Sales Ecuador", page_icon=":material/insigh
 theme.apply()
 
 pages = {
-    "Summary": [st.Page("views/home.py", title="Project summary", default=True)],
+    "Start": [st.Page("views/welcome.py", title="Welcome", default=True)],
     "Technical dashboard": [
-        st.Page("views/raw_data.py", title="1. Raw data and EDA before cleaning", url_path="raw-data"),
-        st.Page("views/pipeline.py", title="2. Merging and cleaning", url_path="pipeline"),
-        st.Page("views/validation.py", title="3. Validation", url_path="validation"),
-        st.Page("views/explore.py", title="4. EDA after cleaning", url_path="explore"),
-        st.Page("views/studio.py", title="5. Chart studio", url_path="studio"),
-        st.Page("views/features.py", title="6. Features", url_path="features"),
+        st.Page("views/home.py", title="1. Project summary", url_path="summary"),
+        st.Page("views/raw_data.py", title="2. Raw data and EDA before cleaning", url_path="raw-data"),
+        st.Page("views/pipeline.py", title="3. Merging and cleaning", url_path="pipeline"),
+        st.Page("views/validation.py", title="4. Validation", url_path="validation"),
+        st.Page("views/explore.py", title="5. EDA after cleaning", url_path="explore"),
+        st.Page("views/studio.py", title="6. Chart studio", url_path="studio"),
+        st.Page("views/features.py", title="7. Features", url_path="features"),
     ],
     "Store manager dashboard": [
         st.Page("views/mgr_dashboard.py", title="My store", url_path="manager"),

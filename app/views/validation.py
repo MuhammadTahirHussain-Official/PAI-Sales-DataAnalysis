@@ -10,8 +10,9 @@ from lib import data, theme
 
 S = data.summary()
 
+theme.flow_top("views/validation.py")
 theme.page_title(
-    "Technical · Step 3",
+    "Technical dashboard",
     "Every rule, <em>checked</em>",
     "Cleaning is only trustworthy if it is tested. The project checks itself in two ways: pandas assertions over all three million rows, "
     "and Pydantic models that describe what a valid row looks like and reject anything else.")
@@ -118,3 +119,5 @@ with c3:
     except ValidationError as e:
         msgs = "<br>".join(f"<code>{'.'.join(map(str, err['loc']))}</code>: {theme.esc(err['msg'])} (input: {theme.esc(err['input'])})" for err in e.errors())
         st.markdown(f'<div class="insight" style="border-color:{theme.PERSIMMON}"><div class="t">Rejected</div><p>{msgs}</p></div>', unsafe_allow_html=True)
+
+theme.flow_next("views/validation.py")

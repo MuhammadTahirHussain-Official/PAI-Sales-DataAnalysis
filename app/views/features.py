@@ -8,8 +8,9 @@ S = data.summary()
 MR = S["model_ready"]
 feat = data.load("features")
 
+theme.flow_top("views/features.py")
 theme.page_title(
-    "Technical · Step 6",
+    "Technical dashboard",
     "Ready for a model, <em>without peeking</em>",
     "Notebook 05 turns the cleaned table into numbers a model can learn from. The rule behind every feature: "
     "use only information that would really be known at forecast time.")
@@ -67,3 +68,5 @@ theme.ledger(["Column", "Values", "Encoding", "Why"],
 theme.insight("Not done yet, on purpose: the split and the scaling.",
               "The next step splits by date (for example, train until 2017-07-30 and validate on the last 16 days) and fits any scaler on the training part only. "
               "Doing either on all data now would leak the future into the model.")
+
+theme.flow_next("views/features.py")

@@ -5,8 +5,9 @@ import streamlit as st
 
 from lib import data, explain, theme
 
+theme.flow_top("views/studio.py")
 theme.page_title(
-    "Technical · Step 5",
+    "Technical dashboard",
     "Chart <em>studio</em>",
     "Pick a table, any column for x and y, a chart type and filters. Hover any mark for its values; click a point to compare it with its neighbours.")
 
@@ -127,3 +128,5 @@ else:
 with st.expander("Data behind the chart"):
     st.dataframe(plot.head(500), width="stretch", hide_index=True)
     st.download_button("Download as CSV", plot.to_csv(index=False).encode(), file_name="chart_data.csv")
+
+theme.flow_next("views/studio.py")

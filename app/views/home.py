@@ -43,20 +43,11 @@ journey_data = {
              "4 Pydantic models, 0 errors", "85 numeric features with no future data",
              "Technical dashboard for analysts", "Store manager dashboard with actions"],
 }
+theme.flow_top("views/home.py")
 page = (Path(__file__).resolve().parents[1] / "static" / "journey.html").read_text(encoding="utf-8")
 page = (page.replace("__FONTS__", theme.FONT_LINK).replace("__GSAP__", theme.gsap_scripts())
         .replace("__DATA__", json.dumps(journey_data)))
 st.iframe(page, height=890)
-
-c1, c2 = st.columns(2)
-with c1:
-    theme.html(theme.card("For analysts", "Technical dashboard",
-                          "Raw data file by file, merging and cleaning rules, Pydantic coverage, EDA with click-to-explain charts, and a chart studio where you choose any x and y."))
-    st.page_link("views/explore.py", label="Open EDA after cleaning", icon=":material/arrow_forward:")
-with c2:
-    theme.html(theme.card("For store managers", "Store manager dashboard",
-                          "Pick your store and month. See what sold, which day to staff up, what to reorder, why a day was high or low, and the next actions, in plain words."))
-    st.page_link("views/mgr_dashboard.py", label="Open my store", icon=":material/arrow_forward:")
 
 st.link_button("Download the final clean data (CSV, 36 MB zip)", "https://github.com/MuhammadTahirHussain-Official/PAI-Sales-DataAnalysis/raw/main/downloads/cleaned_data.zip", type="primary")
 
@@ -73,3 +64,5 @@ c1, c2, c3 = st.columns(3)
 c1.markdown(theme.card("Data quality", "Trustworthy", f"{sum(ok for _, ok in S['integrity'])} of {len(S['integrity'])} integrity checks pass and {sum(p['checked'] for p in S['pydantic']):,} records were validated by Pydantic with 0 errors."), unsafe_allow_html=True)
 c2.markdown(theme.card("Next step", "Ready to forecast", f"{S['model_ready']['rows']:,} rows and {S['model_ready']['features']} features use only information known 16 days ahead. Split by date, then train."), unsafe_allow_html=True)
 c3.markdown(theme.card("Team", "Project contributors", "Usman Ahmad, Muhammad Anas Alam, Muhammad Tahir Hussain and Hamza Noor. Data: Kaggle Store Sales, Ecuador."), unsafe_allow_html=True)
+
+theme.flow_next("views/home.py")

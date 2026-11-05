@@ -10,8 +10,9 @@ from lib.data import MONTHS, WEEKDAYS
 S = data.summary()
 R = S["raw"]
 
+theme.flow_top("views/raw_data.py")
 theme.page_title(
-    "Technical · Step 1",
+    "Technical dashboard",
     "Raw data and <em>EDA before cleaning</em>",
     "Before anything is joined or cleaned, each file already tells a story: what is counted, what is missing and why. "
     "Each file below shows its columns, what every column means, and the charts that matter for it.")
@@ -275,3 +276,5 @@ if True:  # holidays_events.csv
     st.dataframe(pairs, width="stretch", hide_index=True)
     theme.figcap("2.2", "Table", "The 12 transferred holidays next to the 12 Transfer records, both sorted by date.",
                  "Holidays falling mid-week are often moved next to a weekend. In the cleaned data the official date counts as a normal day and the new date as the holiday.", "")
+
+theme.flow_next("views/raw_data.py")

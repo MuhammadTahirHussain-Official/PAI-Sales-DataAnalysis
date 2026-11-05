@@ -4,9 +4,11 @@ An interactive Streamlit report on the Kaggle **Store Sales – Time Series Fore
 
 ## What is in it
 
-**Project summary (first page).** The whole project in one view: a GSAP animation of the six steps (raw data, merging, EDA before cleaning, cleaning, EDA after cleaning, conclusion) drawn from real numbers, plus the conclusions and links to both dashboards.
+**Welcome page.** A full-screen GSAP landing page with two ways in. 1,782 particles, one per store and product series, react to the cursor and reshape into real charts while you scroll.
 
-**Technical dashboard**, for analysts:
+**Project summary (first step for technical users).** The whole project in one view: a GSAP animation of the six steps (raw data, merging, EDA before cleaning, cleaning, EDA after cleaning, conclusion) drawn from real numbers, plus the conclusions and links to both dashboards.
+
+**Technical dashboard**, for analysts. It runs in order from the summary, with a step rail at the top and a link to the next step at the bottom of each page:
 
 | Page | What it shows |
 | --- | --- |

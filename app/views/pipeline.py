@@ -10,8 +10,9 @@ S = data.summary()
 M = S["merged"]["missing"]
 C = S["clean"]
 
+theme.flow_top("views/pipeline.py")
 theme.page_title(
-    "Technical · Step 2",
+    "Technical dashboard",
     "Merging and <em>cleaning</em>",
     "How the files were joined without losing or duplicating a single sales row, which values were missing after the join, "
     "and exactly which rule filled each of them.")
@@ -177,3 +178,5 @@ theme.ledger(["Columns", "Meaning"], [
     ["sales_log1p, sales_extreme_flag, is_earthquake_period", "Log of sales, flagged extreme values, earthquake month"],
     ["year, month, day, day_of_week, day_name, week_of_year, quarter, is_weekend, is_payday", "Date features"],
 ])
+
+theme.flow_next("views/pipeline.py")
