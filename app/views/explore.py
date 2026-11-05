@@ -424,13 +424,13 @@ def ch_distribution():
     col = c2.segmented_control("Values", ["sales_log1p", "sales"], default="sales_log1p", format_func=lambda c: "log(1 + sales)" if c == "sales_log1p" else "sales") or "sales_log1p"
     zeros = c3.toggle("Include zero-sales rows", False)
     v = smp if zeros else smp[smp["sales"] > 0]
-    v = v.copy()
+    v = v.sample(min(20_000, len(v)), random_state=1).copy()
     v[by] = v[by].astype(str)
     order = v.groupby(by)[col].median().sort_values().index.tolist()
     fig = px.box(v, x=col, y=by, color_discrete_sequence=[theme.TEAL], points=False, category_orders={by: order})
     fig.update_layout(xaxis_title="log(1 + sales)" if col == "sales_log1p" else "sales", yaxis_title="")
     theme.chart(fig, height=max(360, 24 * len(order)))
-    theme.figcap("5.18", "Box plots", f"Distribution of {('log ' if col == 'sales_log1p' else '')}sales per row, split by {data.label(by).lower()} (150,000-row sample{', zeros included' if zeros else ', selling rows only'}).",
+    theme.figcap("5.18", "Box plots", f"Distribution of {('log ' if col == 'sales_log1p' else '')}sales per row, split by {data.label(by).lower()} (20,000 sampled rows{', zeros included' if zeros else ', selling rows only'}).",
                  "On the log scale every group is roughly symmetric, which is why the log column is used for modelling. Families differ by orders of magnitude, so a single global outlier rule would flag all of GROCERY I and none of BOOKS.",
                  "switch to 'sales' to see how skewed the raw values are.")
     sf = data.load("store_family")

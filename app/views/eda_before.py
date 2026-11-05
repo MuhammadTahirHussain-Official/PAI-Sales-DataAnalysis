@@ -24,17 +24,17 @@ if True:  # train.csv
     clip = c2.slider("Linear view: cut the tail at percentile", 90.0, 100.0, 99.0, 0.5)
     fam = c3.selectbox("Family (linear view)", ["All families"] + sorted(data.load("family_summary")["family"]))
     if scale == "Linear (sample)":
-        smp = data.load("raw_train_sample")
+        smp = data.load("raw_train_sample").sample(40_000, random_state=1)
         if fam != "All families":
             smp = smp[smp["family"] == fam]
         cut = smp["sales"].quantile(clip / 100)
         view = smp[smp["sales"] <= cut]
         fig = px.histogram(view, x="sales", nbins=80, color_discrete_sequence=[theme.TEAL])
         fig.update_traces(hovertemplate="sales %{x}<br>%{y:,} rows<extra></extra>", marker_line_width=0)
-        fig.update_layout(xaxis_title="Units sold per row", yaxis_title="Rows (150,000-row sample)", bargap=0.04)
+        fig.update_layout(xaxis_title="Units sold per row", yaxis_title="Rows (40,000-row sample)", bargap=0.04)
         theme.chart(fig, height=380)
         theme.figcap("1.1", "Histogram, linear scale",
-                     f"{fam}: sales of a random sample of 150,000 rows, cut at the {clip:g}th percentile ({cut:,.0f} units).",
+                     f"{fam}: sales of a random sample of 40,000 rows, cut at the {clip:g}th percentile ({cut:,.0f} units).",
                      "Almost everything is squeezed into the first bars: most rows sell a handful of units. Moving the slider to 100 shows how far the tail reaches.",
                      "each bar is a range of sales; its height is how many rows fall into it.")
     else:
@@ -72,14 +72,14 @@ if True:  # train.csv
                  "switch the ranking above; hover a bar for all four measures of that family.")
 
     theme.chapter("1.3", "Promotions and sales in the raw file")
-    smp = data.load("raw_train_sample").copy()
+    smp = data.load("raw_train_sample").sample(20_000, random_state=1).copy()
     smp["promo_bucket"] = pd.cut(smp["onpromotion"], [-1, 0, 5, 20, 50, 1000], labels=["0", "1–5", "6–20", "21–50", "50+"])
     smp["log_sales"] = np.log1p(smp["sales"])
     fig = px.box(smp, x="promo_bucket", y="log_sales", color_discrete_sequence=[theme.OCHRE], points=False)
     fig.update_layout(xaxis_title="Items on promotion in that row", yaxis_title="log(1 + sales)")
     theme.chart(fig, height=380)
     theme.figcap("1.3", "Box plot",
-                 "Sales (log scale) of 150,000 sample rows, grouped by how many items were on promotion.",
+                 "Sales (log scale) of 20,000 randomly sampled rows, grouped by how many items were on promotion.",
                  "The more items are promoted, the higher the typical sales. Note that 2013 has no promotions recorded at all. Part of the lift is because big families (GROCERY I) are promoted the most, so promotions and family size are tangled; the Explore page separates them.",
                  "the line in each box is the median; the box holds the middle 50% of rows.")
 
@@ -138,11 +138,11 @@ if True:  # transactions.csv
                  "darker means more missing days in that month; hover for exact numbers.")
     theme.chapter("1.7", "Traffic by store type")
     obs = sd[sd["transactions_original"].notna()]
-    fig = px.violin(obs, x="store_type", y="transactions_original", color="store_type", box=True, points=False,
+    fig = px.violin(obs.sample(10_000, random_state=1), x="store_type", y="transactions_original", color="store_type", box=True, points=False,
                     color_discrete_sequence=theme.COLORWAY, category_orders={"store_type": list("ABCDE")})
     fig.update_layout(showlegend=False, xaxis_title="Store type", yaxis_title="Transactions per store-day")
     theme.chart(fig, height=420)
-    theme.figcap("1.7", "Violin plot", "Distribution of observed transactions per store-day for each store type.",
+    theme.figcap("1.7", "Violin plot", "Distribution of observed transactions per store-day for each store type (10,000 sampled store-days).",
                  "Type A stores serve about three times as many customers per day as type C (median 3,138 against 1,017). The wide shapes show that stores of one type still differ a lot.",
                  "the width shows how common a value is; the inner box marks the median and middle half.")
 
