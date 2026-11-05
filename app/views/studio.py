@@ -6,7 +6,7 @@ import streamlit as st
 from lib import data, explain, theme
 
 theme.page_title(
-    "Build your own view",
+    "Technical · Step 5",
     "Chart <em>studio</em>",
     "Pick a table, any column for x and y, a chart type and filters. Hover any mark for its values; click a point to compare it with its neighbours.")
 
@@ -74,9 +74,9 @@ if clr:
 labels = {c: data.label(c) for c in plot.columns}
 common = dict(color=clr, labels=labels, color_discrete_sequence=theme.COLORWAY, log_x=logx)
 if kind == "Line":
-    fig = px.line(plot.sort_values(x), x=x, y=y, markers=len(plot) < 3000, log_y=logy, **common)
-    if len(plot) >= 3000:
-        fig.update_traces(mode="lines+markers", marker=dict(size=3, opacity=.4))
+    fig = px.line(plot.sort_values(x), x=x, y=y, markers=len(plot) < 400, log_y=logy, **common)
+    if len(plot) >= 400:
+        fig.update_traces(mode="lines+markers", marker=dict(size=3, opacity=.35), line=dict(width=1.3))
 elif kind == "Scatter":
     fig = px.scatter(plot, x=x, y=y, log_y=logy, opacity=.6, render_mode="webgl", **common)
 elif kind == "Bar":

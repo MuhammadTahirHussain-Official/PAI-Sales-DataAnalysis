@@ -2,19 +2,30 @@
 
 An interactive Streamlit report on the Kaggle **Store Sales – Time Series Forecasting** data (54 stores in Ecuador, 33 product families, 2013 – 2017, 3,000,888 rows). It walks through the raw files, the ETL and cleaning, the data validation, the exploratory analysis and the model-ready features.
 
-## Pages
+## What is in it
+
+**Project summary (first page).** The whole project in one view: a GSAP animation of the six steps (raw data, merging, EDA before cleaning, cleaning, EDA after cleaning, conclusion) drawn from real numbers, plus the conclusions and links to both dashboards.
+
+**Technical dashboard**, for analysts:
 
 | Page | What it shows |
 | --- | --- |
-| Overview | Animated sales line and counters, what one row means, the five source files, key findings |
-| The raw data | One view per CSV before cleaning: column dictionary, facts and interactive charts |
-| ETL & cleaning | Animated join pipeline, join checks, missing values before/after, the cleaning ledger |
-| Validation | 11 integrity checks, four Pydantic models with rules and results, coverage matrix, live re-run, "try to break it" |
-| Explore sales | Ten chapters: time series with click-to-explain, weekly/yearly rhythm, holidays, families, stores, promotions, oil, earthquake, distributions, correlations |
-| Chart studio | Any table, any x/y/colour, chart type, aggregation, log axes, trend line and filters |
-| Features | The no-leakage rule, feature groups, correlation with the target, encoding |
+| 1. Raw data and EDA before cleaning | Every CSV: column dictionary, facts and charts |
+| 2. Merging and cleaning | Animated joins, checks at every join, missing values before and after, the cleaning ledger |
+| 3. Validation | 11 integrity checks, four Pydantic models, coverage matrix, live re-run, "try to break it" |
+| 4. EDA after cleaning | 20 charts on one page; click a point on the time series for a summary of that day and likely reasons |
+| 5. Chart studio | Any table, any x, y and colour, chart type, aggregation, log axes, trend line, filters |
+| 6. Features | The no-leakage rule, feature groups, correlation with the target, encoding |
 
-Every chart shows exact values on hover and has a caption underneath. Clicking a point on the time series opens a summary of that day: how it compares with the days around it and the likely reasons (holidays and events, weekday, closed stores, promotions, transactions, oil, payday, earthquake).
+**Store manager dashboard**, for non-technical users. It uses the structure of the team's manager prototype with real data for any of the 54 stores:
+
+| Page | What it shows |
+| --- | --- |
+| My store | One-sentence summary, key numbers, all 33 products (click one to drill down), day-by-day line, 12-month trend, monthly goal (8% above last year), best weekdays, products to watch, Excel order list |
+| Product calendar | Colour calendar for one product; click a day to see why it was high or low and what to do |
+| Insights and actions | Prioritised next actions, promotion lift, holidays, weekends and payday, customers (observed vs filled), unusual days, comparison with region and chain averages |
+
+Suggested orders exclude stock on hand because the data has no stock counts. Motion uses GSAP 3.13 (bundled in `app/static`, standard GSAP license).
 
 ## Run locally
 
@@ -35,8 +46,8 @@ One-time setup after deploying: repository Settings → Secrets and variables �
 
 ## Data
 
-The app reads only `app/data/` (about 5 MB): daily, store-day, family-day and store-family aggregates, the stores/oil/holiday tables, two 150,000-row random samples, real Pydantic validation results and feature correlations. These were produced by `app/prepare_data.py` from the original Kaggle CSVs and the outputs of the cleaning and feature-engineering notebooks of the analysis project, which are not included here. The source data belongs to the Kaggle competition and is subject to its rules.
+The app reads only `app/data/` (about 12 MB): daily, store-day, family-day and store-family aggregates, one small daily file per store for the manager pages, the stores/oil/holiday tables, two 150,000-row random samples, real Pydantic validation results and feature correlations. These were produced by `app/prepare_data.py` from the original Kaggle CSVs and the outputs of the cleaning and feature-engineering notebooks of the analysis project, which are not included here. The source data belongs to the Kaggle competition and is subject to its rules.
 
 ## Design
 
-Instrument Serif, Geist and Geist Mono on a paper-toned palette. Motion is CSS only and respects reduced-motion settings.
+Bricolage Grotesque, Hanken Grotesk and JetBrains Mono on charcoal glass panels with one ember accent. Every panel keeps clear space around it. Motion respects reduced-motion settings.

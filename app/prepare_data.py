@@ -14,6 +14,7 @@ Outputs: app/data/*.parquet and app/data/summary.json (a few MB in total).
 Only aggregates and a small random sample of rows are written.
 """
 import json
+import os
 import time
 from datetime import date as date_type
 from pathlib import Path
@@ -23,7 +24,7 @@ import pandas as pd
 from pydantic import BaseModel, Field, ValidationError
 
 ROOT = Path(__file__).resolve().parents[1]
-FILES = ROOT / "files"
+FILES = Path(os.environ.get("STORE_FILES", ROOT / "files"))  # folder with the Kaggle CSVs and notebook outputs
 OUT = ROOT / "app" / "data"
 OUT.mkdir(parents=True, exist_ok=True)
 summary = {}
@@ -224,6 +225,15 @@ save(daily, "daily")
 # clean sample rows for distributions
 sample_cols = ["date", "store_nbr", "family", "sales", "sales_log1p", "onpromotion", "transactions",
                "oil_price", "type", "city", "cluster", "is_holiday", "is_weekend", "sales_extreme_flag"]
+# one small file per store for the store manager pages (daily sales per product)
+(OUT / "stores").mkdir(exist_ok=True)
+for number, rows in clean[["date", "store_nbr", "family", "sales", "onpromotion"]].groupby("store_nbr"):
+    part = rows.drop(columns="store_nbr").copy()
+    part["family"] = part["family"].astype(str)
+    part["sales"] = part["sales"].round(2).astype("float32")
+    part["onpromotion"] = part["onpromotion"].astype("int16")
+    part.to_parquet(OUT / "stores" / f"store_{number}.parquet", index=False, compression="zstd")
+
 clean_sample = clean[sample_cols].sample(n=150_000, random_state=7).copy()
 for c in ["family", "type", "city"]:
     clean_sample[c] = clean_sample[c].astype(str)
@@ -379,5 +389,5 @@ summary["model_ready"] = {
 }
 
 (OUT / "summary.json").write_text(json.dumps(summary, indent=1, default=str), encoding="utf-8")
-total = sum(p.stat().st_size for p in OUT.iterdir())
-print(f"Done. {len(list(OUT.iterdir()))} files, {total / 1024**2:.1f} MB in {OUT}")
+total = sum(p.stat().st_size for p in OUT.rglob("*") if p.is_file())
+print(f"Done. {total / 1024**2:.1f} MB in {OUT}")

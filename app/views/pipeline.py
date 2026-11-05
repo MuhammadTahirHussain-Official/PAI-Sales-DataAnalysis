@@ -10,40 +10,39 @@ M = S["merged"]["missing"]
 C = S["clean"]
 
 theme.page_title(
-    "Parts 1 & 3 · Extract, transform, load",
-    "From five files to <em>one clean table</em>",
+    "Technical · Step 2",
+    "Merging and <em>cleaning</em>",
     "How the files were joined without losing or duplicating a single sales row, which values were missing after the join, "
     "and exactly which rule filled each of them.")
 
 # ------------------------------------------------------------------ animated pipeline
 steps = S["etl_steps"]
 nodes = "".join(
-    f'<div class="node" style="animation-delay:{0.15 + i * 0.35:.2f}s"><div class="k">{"Extract" if i == 0 else "Join " + str(i)}</div>'
+    f'<div class="node"><div class="k">{"Extract" if i == 0 else "Join " + str(i)}</div>'
     f'<div class="t">{s["step"]}</div><div class="m">{s["rows"]:,} rows · {s["columns"]} cols</div>'
     f'<div class="j">{s["join"]}<br>key: {s["key"]}</div></div>'
-    + (f'<div class="link" style="animation-delay:{0.3 + i * 0.35:.2f}s"><span></span></div>' if i < len(steps) - 1 else "")
+    + ('<div class="link"><span></span></div>' if i < len(steps) - 1 else "")
     for i, s in enumerate(steps))
 flow = f"""<!doctype html><html><head><link rel="stylesheet" href="{theme.FONT_LINK}"><style>
 * {{ box-sizing: border-box; margin: 0; }}
-body {{ background: {theme.PAPER}; font-family: {theme.FONT_BODY}; color: {theme.INK}; }}
-.flow {{ display: flex; align-items: stretch; gap: 0; padding: 6px 2px; }}
-.node {{ flex: 1 1 0; background: {theme.CARD}; border: 1px solid {theme.RULE}; border-radius: 14px; padding: 14px 14px 12px;
-        opacity: 0; transform: translateY(14px); animation: in .8s cubic-bezier(.2,.7,.1,1) forwards; }}
-.node:last-child {{ background: {theme.INK}; color: {theme.PAPER}; border-color: {theme.INK}; }}
-.node:last-child .m, .node:last-child .j {{ color: #CFC6B6; }}
+html, body {{ background: transparent; font-family: {theme.FONT_BODY}; color: {theme.INK}; overflow: hidden; }}
+.flow {{ display: flex; align-items: stretch; padding: 4px; }}
+.node {{ flex: 1 1 0; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 14px; }}
+.node:last-child {{ background: {theme.PERSIMMON}; color: #14110E; border-color: {theme.PERSIMMON}; }}
+.node:last-child .k, .node:last-child .m, .node:last-child .j {{ color: #14110E; }}
 .k {{ font-family: {theme.FONT_MONO}; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: {theme.PERSIMMON}; }}
-.t {{ font-family: {theme.FONT_DISPLAY}; font-size: 25px; line-height: 1.05; margin: 6px 0 8px; }}
+.t {{ font-family: {theme.FONT_DISPLAY}; font-size: 22px; line-height: 1.1; margin: 6px 0 8px; }}
 .m {{ font-family: {theme.FONT_MONO}; font-size: 12px; color: {theme.INK_2}; }}
 .j {{ font-size: 12px; color: {theme.MUTED}; margin-top: 8px; line-height: 1.45; }}
-.link {{ flex: 0 0 34px; position: relative; opacity: 0; animation: fade .4s forwards; }}
-.link span {{ position: absolute; top: 50%; left: 4px; right: 4px; height: 2px; background: {theme.RULE}; overflow: hidden; }}
-.link span::after {{ content: ""; position: absolute; inset: 0; width: 40%; background: {theme.PERSIMMON}; animation: travel 1.6s linear infinite; }}
-@keyframes in {{ to {{ opacity: 1; transform: none; }} }}
-@keyframes fade {{ to {{ opacity: 1; }} }}
-@keyframes travel {{ from {{ transform: translateX(-100%); }} to {{ transform: translateX(260%); }} }}
-@media (max-width: 760px) {{ .flow {{ flex-direction: column; }} .link {{ flex-basis: 18px; }} }}
-</style></head><body><div class="flow">{nodes}</div></body></html>"""
-st.iframe(flow, height=210)
+.link {{ flex: 0 0 28px; position: relative; }}
+.link span {{ position: absolute; top: 50%; left: 4px; right: 4px; height: 2px; background: {theme.PERSIMMON}; transform-origin: left; }}
+@media (max-width: 760px) {{ .flow {{ flex-direction: column; }} .link {{ flex-basis: 16px; }} }}
+</style></head><body><div class="flow">{nodes}</div>{theme.gsap_scripts()}<script>
+gsap.timeline()
+  .from('.node', {{autoAlpha: 0, y: 18, stagger: .22, duration: .6, ease: 'power3.out'}})
+  .from('.link span', {{scaleX: 0, stagger: .22, duration: .4, ease: 'power2.inOut'}}, .3);
+</script></body></html>"""
+st.iframe(flow, height=230)
 theme.figcap("3.0", "Pipeline diagram",
              "The four left joins of Part 1. The sales table stays the left side of every join.",
              "The row count stays 3,000,888 after every join: no sales row was lost and none was duplicated. Joins with many_to_one validation would fail if a store, a store-day or a holiday store-day appeared twice on the right side.",

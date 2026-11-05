@@ -11,7 +11,7 @@ from lib import data, theme
 S = data.summary()
 
 theme.page_title(
-    "Parts 3 – 5 · Data validation",
+    "Technical · Step 3",
     "Every rule, <em>checked</em>",
     "Cleaning is only trustworthy if it is tested. The project checks itself in two ways: pandas assertions over all three million rows, "
     "and Pydantic models that describe what a valid row looks like and reject anything else.")
@@ -29,7 +29,7 @@ theme.stats([
 theme.chapter("4.1", "Did cleaning keep the original data intact?",
               "Each line compares the cleaned table with the merged table it came from. Cleaning may add information; it must never change an observation.")
 theme.ledger(["Check", "Result"],
-             [[name, '<span class="ok">PASS</span>' if ok else '<span class="bad">FAIL</span>'] for name, ok in S["integrity"]])
+             [[name, '<span class="ok">PASS</span>' if ok else '<span class="fail">FAIL</span>'] for name, ok in S["integrity"]])
 
 # ------------------------------------------------------------------ models
 theme.chapter("4.2", "The Pydantic models",

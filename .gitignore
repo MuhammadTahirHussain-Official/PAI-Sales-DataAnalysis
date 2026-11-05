@@ -4,3 +4,4 @@ __pycache__/
 .ipynb_checkpoints/
 # Raw Kaggle data and notebook outputs used by app/prepare_data.py stay local.
 files/
+.claude/

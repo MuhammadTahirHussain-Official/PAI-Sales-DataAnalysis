@@ -9,19 +9,15 @@ from lib import data, explain, theme
 from lib.data import MONTHS, WEEKDAYS
 
 theme.page_title(
-    "Part 4 · Exploratory data analysis",
-    "What the cleaned data <em>tells us</em>",
-    "Ten questions, each with its own chart and controls. Hover any chart for exact values. On the time series, "
+    "Technical · Step 4",
+    "EDA <em>after cleaning</em>",
+    "Ten questions, each with its own charts and controls, all on this page. Hover any chart for exact values. On the time series, "
     "click a point to get a summary of that day: how it compares with the days around it, and the most likely reasons.")
 
 store_day = data.load("store_day")
 family_day = data.load("family_day")
 daily = data.load("daily")
 hol = data.holidays_active()
-
-CHAPTERS = ["Over time", "Weekly & yearly rhythm", "Holidays & events", "Product families", "Stores",
-            "Promotions", "Oil", "Earthquake", "Distribution & outliers", "Correlations"]
-chap = st.segmented_control("Chapter", CHAPTERS, default="Over time", label_visibility="collapsed") or "Over time"
 
 # national / any holiday names per date for hover text
 names = (hol[hol["active"]].groupby("date")
@@ -50,7 +46,8 @@ def scope_picker(prefix, allow_family=True):
 
 
 # =================================================================== over time
-if chap == "Over time":
+@st.fragment
+def ch_time():
     theme.chapter("5.1", "Sales and traffic over time",
                   "Choose what to plot and for which stores. Then click any point: the panel below explains that day.")
     scope, value = scope_picker("ts")
@@ -126,13 +123,14 @@ if chap == "Over time":
                      "Use this to see whether the clicked value is part of the weekly rhythm or a real break from it.", "")
         if st.button("Clear selection"):
             st.session_state.pop("ts_selected", None)
-            st.rerun()
+            st.rerun(scope="fragment")
     else:
         st.markdown('<div class="hint">Click a point on the chart to see a summary of that day and why it is higher or lower than the days around it.</div>',
                     unsafe_allow_html=True)
 
 # =================================================================== rhythm
-elif chap == "Weekly & yearly rhythm":
+@st.fragment
+def ch_rhythm():
     theme.chapter("5.3", "When in the week and the year do people shop?")
     scope, value = scope_picker("rh", allow_family=False)
     c1, c2 = st.columns([1, 2])
@@ -160,7 +158,8 @@ elif chap == "Weekly & yearly rhythm":
                  "Every year has the same shape: a dip mid-week and a weekend peak. The lines move up over time because the business grew, but the shape stays.", "")
 
 # =================================================================== holidays
-elif chap == "Holidays & events":
+@st.fragment
+def ch_holidays():
     theme.chapter("5.5", "Do holidays change sales?",
                   "Each store-day gets one kind: national, regional or local holiday, event, work day or normal day. Only selling store-days are compared.")
     c1, c2, c3 = st.columns(3)
@@ -231,7 +230,8 @@ elif chap == "Holidays & events":
                  "the x-axis counts down to Christmas from left to right.")
 
 # =================================================================== families
-elif chap == "Product families":
+@st.fragment
+def ch_families():
     theme.chapter("5.8", "What sells, and how each family moves")
     fams = sorted(family_day["family"].unique())
     c1, c2, c3 = st.columns([2, 1, 1])
@@ -274,7 +274,8 @@ elif chap == "Product families":
                  "red is above the family's normal level, teal below.")
 
 # =================================================================== stores
-elif chap == "Stores":
+@st.fragment
+def ch_stores_():
     theme.chapter("5.10", "How different are the stores?")
     c1, c2 = st.columns(2)
     color_by = c1.selectbox("Colour by", ["store_type", "cluster", "city", "state"], format_func=data.label)
@@ -305,7 +306,8 @@ elif chap == "Stores":
                  "The best store sells more than ten times as much per day as the weakest one. Store format and city explain most of that gap.", "")
 
 # =================================================================== promotions
-elif chap == "Promotions":
+@st.fragment
+def ch_promotions():
     theme.chapter("5.12", "Do promotions lift sales?",
                   "Promotions were not recorded before 2014. Within each family, rows with at least one promoted item are compared with rows without any.")
     smp = data.load("clean_sample")
@@ -341,7 +343,8 @@ elif chap == "Promotions":
                  "Promotions start in 2014 and grow fast until 2016, while sales also rise. Both trend upward together, so a simple correlation over time exaggerates the promotion effect.", "")
 
 # =================================================================== oil
-elif chap == "Oil":
+@st.fragment
+def ch_oil():
     theme.chapter("5.14", "Does the oil price move grocery sales?",
                   "Ecuador exports oil, so a price collapse can squeeze incomes. The question is whether we can see it in daily groceries.")
     win = st.slider("Rolling window (days)", 30, 365, 90, 15)
@@ -376,7 +379,8 @@ elif chap == "Oil":
                  "The points form colour bands by year rather than one line: time (business growth) explains sales much better than the oil price does.", "")
 
 # =================================================================== earthquake
-elif chap == "Earthquake":
+@st.fragment
+def ch_earthquake():
     theme.chapter("5.16", "16 April 2016: the earthquake",
                   "A magnitude 7.8 earthquake hit the Ecuadorian coast. The holiday file marks the following month as 'Terremoto Manabi' events.")
     ds = daily.set_index("date")["sales"]
@@ -410,7 +414,8 @@ elif chap == "Earthquake":
                  "Almost every family rose; GROCERY I, the largest, grew about 31%. The extreme jump of SCHOOL AND OFFICE SUPPLIES (about +270%) overlaps with the school start in the coastal region in April – May, so not all of it is the earthquake.", "")
 
 # =================================================================== distribution
-elif chap == "Distribution & outliers":
+@st.fragment
+def ch_distribution():
     theme.chapter("5.18", "Shape of sales after cleaning, and the flagged extremes")
     smp = data.load("clean_sample")
     c1, c2, c3 = st.columns(3)
@@ -443,7 +448,8 @@ elif chap == "Distribution & outliers":
                  "Zero rows fall from about 50% in 2013 to about 15% in 2017 as new stores open and assortments widen. Spikes to 100% are 1 January.", "")
 
 # =================================================================== correlations
-else:
+@st.fragment
+def ch_corr():
     theme.chapter("5.21", "Which measures move together?",
                   "Store-day level. Only store-days with observed transactions are used: estimated values come from sales and would inflate that link.")
     sd = store_day[store_day["fill_method"] == "observed"].copy()
@@ -466,3 +472,8 @@ else:
                      "Sales and transactions are strongly linked (0.84). Promotions and year are linked because promotions only grew over time; oil is negative because it fell while sales grew. "
                      "Spearman uses ranks and is less sensitive to the skewed sales values.",
                      "+1 means the two always rise together, −1 that one falls when the other rises, 0 no straight-line link.")
+
+
+for chapter_view in [ch_time, ch_rhythm, ch_holidays, ch_families, ch_stores_, ch_promotions,
+                     ch_oil, ch_earthquake, ch_distribution, ch_corr]:
+    chapter_view()

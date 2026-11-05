@@ -11,14 +11,11 @@ S = data.summary()
 R = S["raw"]
 
 theme.page_title(
-    "Part 1 · Before cleaning",
-    "The raw data, <em>file by file</em>",
+    "Technical · Step 1",
+    "Raw data and <em>EDA before cleaning</em>",
     "Before anything is joined or cleaned, each file already tells a story: what is counted, what is missing and why. "
-    "Pick a file to see its columns, what every column means, and the charts that matter for it.")
+    "Each file below shows its columns, what every column means, and the charts that matter for it.")
 
-choice = st.segmented_control("File", ["train.csv", "stores.csv", "transactions.csv", "oil.csv", "holidays_events.csv"],
-                              default="train.csv", label_visibility="collapsed")
-choice = choice or "train.csv"
 
 
 def dictionary(rows):
@@ -26,7 +23,8 @@ def dictionary(rows):
 
 
 # =================================================================== train
-if choice == "train.csv":
+if True:  # train.csv
+    theme.chapter("File", "train.csv", "Sales per date, store and product family")
     t = R["train"]
     sales = t["sales"]
     theme.stats([
@@ -113,7 +111,8 @@ if choice == "train.csv":
                  "the line in each box is the median; the box holds the middle 50% of rows.")
 
 # =================================================================== stores
-elif choice == "stores.csv":
+if True:  # stores.csv
+    theme.chapter("File", "stores.csv", "Where each store is and what kind it is")
     s = data.stores()
     theme.stats([("54", "stores", "no duplicates, no missing values"), (str(s["city"].nunique()), "cities", ""),
                  (str(s["state"].nunique()), "states", ""), ("5", "store types", "A – E"), (str(s["cluster"].nunique()), "clusters", "groups of similar stores")])
@@ -152,7 +151,8 @@ elif choice == "stores.csv":
                  "darker cells mean more stores.")
 
 # =================================================================== transactions
-elif choice == "transactions.csv":
+if True:  # transactions.csv
+    theme.chapter("File", "transactions.csv", "Customer receipts per store and day")
     t = R["transactions"]
     sd = data.load("store_day")
     theme.stats([(f"{t['rows']:,}", "store-days with a record", f"{t['date_min']} → {t['date_max']}"),
@@ -193,7 +193,8 @@ elif choice == "transactions.csv":
                  "the width shows how common a value is; the inner box marks the median and middle half.")
 
 # =================================================================== oil
-elif choice == "oil.csv":
+if True:  # oil.csv
+    theme.chapter("File", "oil.csv", "Daily oil price")
     t = R["oil"]
     oil = data.load("raw_oil").rename(columns={"dcoilwtico": "price"})
     theme.stats([(f"{t['rows']:,}", "rows", f"{t['date_min']} → {t['date_max']}"),
@@ -230,7 +231,8 @@ elif choice == "oil.csv":
                  "Saturdays and Sundays have no price at all; the few weekday gaps are holidays such as Christmas, New Year and Thanksgiving.", "")
 
 # =================================================================== holidays
-else:
+if True:  # holidays_events.csv
+    theme.chapter("File", "holidays_events.csv", "National, regional and local days")
     t = R["holidays_events"]
     h = data.load("raw_holidays")
     theme.stats([(str(t["rows"]), "records", "2012-03-02 → 2017-12-26"),
