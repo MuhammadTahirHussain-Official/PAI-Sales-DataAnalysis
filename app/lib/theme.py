@@ -327,7 +327,7 @@ REVEAL = """
     const max = main.scrollHeight - main.clientHeight;
     bar.style.transform = 'scaleX(' + (max > 0 ? main.scrollTop / max : 0) + ')';
     const title = doc.querySelector('.page-title');
-    if (title && !reduced) { const y = main.scrollTop; title.style.transform = 'translateY(' + y * .22 + 'px)'; title.style.opacity = Math.max(0, 1 - y / 480); }
+    if (title && !reduced) { const y = main.scrollTop; title.style.opacity = Math.max(.15, 1 - y / 420); }
   }, {signal: win.__fx.signal, passive: true, capture: true});
 
   // clicking a dotted word opens its explanation; clicking a product row presses its hidden button
