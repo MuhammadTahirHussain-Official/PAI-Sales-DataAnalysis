@@ -54,41 +54,40 @@ theme.stats([
 # ------------------------------------------------------------------ products
 theme.chapter("What sold", "What each product sold")
 top = np.log10(tab["units"].max() + 1)
-# Colour comes only from the change: the biggest fall is red (hue 0), the biggest rise is blue
-# (hue 215), and every other product sits in between, in order. Spacing is stretched around zero,
-# because one huge jump (School supplies can reach +4,000%) would otherwise turn the rest red.
-spread = np.sign(tab["change"]) * np.log1p(tab["change"].abs() * 10)
-low, high = tab["change"].min(), tab["change"].max()
-spread_low, spread_high = spread.min(), spread.max()
-
-
-def hue(value):
-    return (value - spread_low) / (spread_high - spread_low) * 215 if spread_high > spread_low else 107
-
+# Four strict colours for the change since last month. Only one product can be the biggest rise or
+# the biggest fall, and a month where nothing rose has no "biggest rise" at all.
+high, low = tab["change"].max(), tab["change"].min()
+seen = set()
 
 rows_html = '<div class="pbar head"><span>Product</span><span></span><span class="num" style="color:inherit;font-size:inherit">Units</span><span class="chg">Change</span></div>'
 for i, (name_, row) in enumerate(tab.iterrows()):
     width = max(np.log10(row["units"] + 1) / top * 100, 1.5)
     change = m.sg(row["change"]) if pd.notna(row["change"]) else "–"
     if pd.isna(row["change"]):      # no sales last month, so there is nothing to compare with
-        fill, text = "linear-gradient(90deg,#4A4B52,#8A8B93)", theme.MUTED
+        kind = "none"
+    elif row["change"] == high and high > 0:
+        kind = "rise"
+    elif row["change"] == low and low < 0:
+        kind = "fall"
+    elif row["change"] >= 0:
+        kind = "pos"
     else:
-        h = hue(spread[name_])
-        fill, text = f"linear-gradient(90deg,hsl({h:.0f},62%,30%),hsl({h:.0f},82%,60%))", f"hsl({h:.0f},82%,68%)"
+        kind = "neg"
+    seen.add(kind)
     rows_html += (f'<div class="pbar{" sel" if name_ == product else ""}" data-click="pick_{i}"><span class="nm" title="{name_}">{name_}</span>'
-                  f'<span class="tr"><i style="background:{fill};width:{width:.1f}%;animation-delay:{i * 18}ms"></i></span>'
-                  f'<span class="num">{fmt(row["units"])}</span><span class="chg" style="color:{text}">{change}</span></div>')
+                  f'<span class="tr"><i class="g-{kind}" style="width:{width:.1f}%;animation-delay:{i * 18}ms"></i></span>'
+                  f'<span class="num">{fmt(row["units"])}</span><span class="chg c-{kind}">{change}</span></div>')
 st.markdown(f'<div class="pbars">{rows_html}</div>', unsafe_allow_html=True)
 with st.container(key="pickers"):
     for i, name_ in enumerate(tab.index):
         if st.button(name_, key=f"pick_{i}"):
             st.session_state["mgr_product"] = name_
             st.rerun()
-if pd.notna(low):
-    st.markdown(f'<div class="scale"><span>Biggest fall {m.sg(low)}</span><i></i><span>Biggest rise {m.sg(high)}</span></div>', unsafe_allow_html=True)
+keys = [("rise", f"Biggest rise {m.sg(high)}"), ("pos", "Rising or flat"), ("neg", "Falling"), ("fall", f"Biggest fall {m.sg(low)}"), ("none", "No sales last month")]
+theme.html('<div class="legend">' + "".join(f'<span><i class="g-{kind}"></i>{text}</span>' for kind, text in keys if kind in seen) + "</div>")
 theme.figcap("M.1", "Ranked bars", "All 33 products, best seller at the top.",
              "A longer bar means more units sold. Bars are drawn on a compressed scale so that small products stay visible, so read the numbers for exact amounts. "
-             "The colour shows the change in units per day since last month: red is this month's biggest fall, blue its biggest rise, and every other product sits in between, in order. Spacing is stretched around zero so that one huge jump does not turn all the others red.",
+             "The colour shows the change in units per day since last month: blue is the biggest rise, green is any other rise, orange is any other fall, and red is the biggest fall.",
              "click a product to see it day by day below.")
 
 # ------------------------------------------------------------------ day by day
