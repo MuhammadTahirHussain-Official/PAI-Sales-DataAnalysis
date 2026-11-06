@@ -4,7 +4,7 @@ This repository holds a Streamlit website that presents a complete retail data p
 
 **Live website:** https://pai-sales-eda.streamlit.app/
 
-| | |
+| Item | Detail |
 | --- | --- |
 | **Data** | Kaggle "Store Sales – Time Series Forecasting": 54 stores in Ecuador, 33 product families, January 2013 to August 2017 |
 | **Size** | 3,000,888 sales rows, one per date, store and product family |
@@ -49,39 +49,42 @@ If the site shows a "get this app back up" page, click the button and wait about
 
 The project has two halves. The **analysis** runs once on the full data, in notebooks. The **website** never touches the full data: it reads small files prepared from the analysis results.
 
-```mermaid
-flowchart TD
-    subgraph A["Analysis: run once, in the team repository"]
-        K["5 Kaggle CSV files"] --> N1["Notebook 01: merging"]
-        N1 --> N2["Notebook 02: EDA before cleaning"]
-        N1 --> N3["Notebook 03: cleaning and validation"]
-        N3 --> N4["Notebook 04: EDA after cleaning"]
-        N3 --> N5["Notebook 05: feature engineering"]
-    end
+```text
+ANALYSIS (run once, in the team repository)
 
-    subgraph B["Preparation: run once, in this repository"]
-        P["app/prepare_data.py"]
-    end
+  5 Kaggle CSV files
+        |
+        v
+  Notebook 01: merging  ------>  Notebook 02: EDA before cleaning
+        |
+        v
+  Notebook 03: cleaning and validation  ------>  Notebook 04: EDA after cleaning
+        |                     |
+        |                     +---------------->  downloads/ (clean CSV as zip files)
+        v
+  Notebook 05: feature engineering
 
-    subgraph C["This repository"]
-        D["app/data: 13 MB of Parquet and JSON"]
-        Z["downloads: clean CSV as zip files"]
-        L["app/lib: shared helpers"]
-        V["app/views: 14 pages"]
-        E["app/streamlit_app.py: entry point"]
-    end
+        |  Kaggle files + outputs of notebooks 01, 03 and 05
+        v
 
-    K --> P
-    N1 --> P
-    N3 --> P
-    N5 --> P
-    N3 --> Z
-    P --> D
-    D --> L
-    L --> V
-    E --> V
-    V --> S["Live website on Streamlit Community Cloud"]
-    G["GitHub Action: hourly visit"] --> S
+PREPARATION (run once, in this repository)
+
+  app/prepare_data.py
+        |
+        v
+
+WEBSITE (this repository)
+
+  app/data/  (13 MB of Parquet and JSON)
+        |
+        v
+  app/lib/  (shared helpers)  <-- app/views/  (14 pages)  <-- app/streamlit_app.py
+                                       |
+                                       v
+                       Live site on Streamlit Community Cloud
+                                       ^
+                                       |
+                       GitHub Action: a visit every hour
 ```
 
 Why this split: the full clean table is 555 MB as a CSV, too large to load on a free host for every visitor. The prepared files hold only what the pages need, so the site stays fast. Download links and raw samples are there for anyone who wants the rows themselves.
@@ -251,17 +254,19 @@ Columns describing the same day, such as `transactions` and `sales_extreme_flag`
 3. Registers all 14 pages with `st.navigation`, hides Streamlit's own menu and draws a custom one with `theme.top_menu()`.
 4. Runs the chosen page from `app/views/`.
 
-```mermaid
-flowchart LR
-    U["Visitor"] --> E["streamlit_app.py"]
-    E --> T["lib/theme.py: design and menu"]
-    E --> V["views/*.py: chosen page"]
-    V --> D["lib/data.py and lib/manager.py"]
-    D --> C["Streamlit cache"]
-    C --> F["app/data"]
-    V --> X["lib/explain.py: clicked points"]
-    T --> G["lib/glossary.py: term popups"]
-    V --> H["static/*.html: animations"]
+```text
+Visitor
+   |
+   v
+app/streamlit_app.py
+   |
+   +--> lib/theme.py        design and menu
+   |       +--> lib/glossary.py   term explanations
+   |
+   +--> views/<page>.py     the chosen page
+           +--> lib/data.py and lib/manager.py --> Streamlit cache --> app/data/
+           +--> lib/explain.py    explanations of clicked points
+           +--> static/*.html     animations
 ```
 
 ### The five helpers
